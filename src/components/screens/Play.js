@@ -125,10 +125,10 @@ export default class Play extends React.Component {
                 overlay = <RoundInstructions round={this.state.round} minigame={this.state.minigame} mode={this.state.mode} />
                 break;
             case "minigameStart":
-                overlay = <MinigameStart endTime={this.state.endTime} />
+                overlay = <MinigameStart />
                 break;
             case "minigamePlay": 
-                overlay = <MinigamePlay />
+                overlay = <MinigamePlay endTime={this.state.endTime} />
                 break;
             case "minigameEnd":
                 overlay = <MinigameEnd />
@@ -183,7 +183,7 @@ export default class Play extends React.Component {
                 case "Red Light Green Light":
                     this.minigameScene = this.redLightGreenLightScene;
                     break;
-                case "Whack-a-Block":
+                case "Block Blaster":
                     this.minigameScene = this.whackABlockScene;
                     break;
                 default:

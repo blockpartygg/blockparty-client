@@ -4,6 +4,7 @@ class BackgroundScene {
     constructor(renderer) {
         this.renderer = renderer;
         this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x570C76);
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.z = 10;
 

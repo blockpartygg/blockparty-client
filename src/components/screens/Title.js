@@ -40,7 +40,7 @@ export default class Title extends React.Component {
             <Animated.View style={{ flex: 1, backgroundColor: "#570C76", opacity: this.state.opacityAnimation, transform: [{ translateY: this.state.translateAnimation }] }}>
                 <KeyboardAvoidingView behavior="padding" enabled style={{ flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center", backgroundColor: "transparent" }}>
                     <View style={{ width: "100%", height: "100%", flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-                        <Image source={blockPartyLogo} style={{ width: "100%", flex: 1 }} resizeMode={"contain"} />
+                        <Image source={blockPartyLogo} style={{ width: "80%", flex: 1 }} resizeMode={"contain"} />
                         <Text style={{ fontSize: 24, fontWeight: "bold", color: "white", textAlign: "center" }}>THE PARTY IN YOUR POCKET</Text>
                     </View>
                     <View style={{ flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center" }}>

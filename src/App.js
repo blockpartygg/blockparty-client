@@ -1,8 +1,7 @@
 import React from "react";
 import { StatusBar } from "react-native";
-import Assets from './Assets';
 //import AssetUtils from './AssetUtils';
-import { AppLoading } from 'expo';
+import { AppLoading, Asset } from 'expo';
 import { Router, Switch, Route } from './Routing';
 import Title from './components/screens/Title';
 import Home from './components/screens/Home';
@@ -13,35 +12,19 @@ export default class App extends React.Component {
         loading: true,
     }
 
-    componentWillMount() {
-        this.loadAssetsAsync();
-    }
-
     loadAssetsAsync = async () => {
-        //await Promise.all([this.preloadAssetsAsync()]);
-        this.setState({ loading: false });
+        const imageAssets = this.cacheImages([require('./assets/images/BlockParty_logo.png')])
+        await Promise.all([...imageAssets]);
     }
 
-    async preloadAssetsAsync() {
-        // await AssetUtils.cacheAssetsAsync({
-        //     fonts: this.fonts,
-        //     files: this.files,
-        // });
-    }
-
-    get fonts() {
-        const items = {};
-        const keys = Object.keys(Assets.fonts || {});
-        for(const key of keys) {
-            const item = Assets.fonts[key];
-            const name = key.substr(0, key.lastIndexOf('.'));
-            items[name] = item;
-        }
-        return [items];
-    }
-
-    get files() {
-        // return AssetUtils.arrayFromObject(Assets.images);
+    cacheImages(images) {
+        return images.map(image => {
+            if(typeof image === 'string') {
+                return Image.prefetch(image);
+            } else {
+                return Asset.fromModule(image).downloadAsync();
+            }
+        });
     }
 
     componentDidMount() {
@@ -50,7 +33,7 @@ export default class App extends React.Component {
     }
 
     render() {
-        let loadingScreen = <AppLoading />
+        let loadingScreen = <AppLoading startAsync={this.loadAssetsAsync} onFinish={() => this.setState({ loading: false })} />
         let appScreen = (
             <Router>
                     <Switch hideNavBar={true}>

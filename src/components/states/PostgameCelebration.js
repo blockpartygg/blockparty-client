@@ -38,18 +38,23 @@ export default class PostgameCelebration extends React.Component {
 
         let renderItem = ({item}) => (
             <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text>{item.rank}</Text>
-                <Text style={{ fontSize: 24 }}>{item.name}</Text>
-                <Text>{item.score}</Text>
+                <Text style={{ fontSize: 18, color: "white" }}>{item.rank}</Text>
+                <Text style={{ fontSize: 24, color: "white" }}>{item.name}</Text>
+                <Text style={{ fontSize: 18, color: "white" }}>{item.score}</Text>
             </View>
         );
 
         return(
-            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} pointerEvents="none">
-                <Text style={{ fontSize: 36 }}>The winner is...</Text>
-                <Text style={{ fontSize: 48 }}>{leaderboardData[0] && leaderboardData[0].name}</Text>
+            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, justifyContent: "center", alignItems: "center" }} pointerEvents="none">
+                <Text style={{ fontSize: 36, color: "white" }}>The winner is...</Text>
+                <Text style={{ fontSize: 48, color: "white" }}>{leaderboardData[0] && leaderboardData[0].name}</Text>
                 <FlatList data={leaderboardData} renderItem={renderItem} />
             </View>
         )
+    }
+
+    componentWillUnmount() {
+        firebase.database().ref('players').off();
+        firebase.database().ref('game/leaderboard').off();
     }
 }

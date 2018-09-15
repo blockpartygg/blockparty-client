@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Animated } from 'react-native';
+import { View, Text, Animated } from 'react-native';
 
 export default class MinigameEnd extends React.Component {
     state = {
@@ -17,7 +17,8 @@ export default class MinigameEnd extends React.Component {
 
     render() {
         return(
-            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} pointerEvents="none">
+            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, justifyContent: "center", alignItems: "center" }} pointerEvents="none">
+                <Text style={{ position: "absolute", top: 40, left: "auto", fontSize: 48, textAlign: "center" }}>0</Text>
                 <Animated.Text selectable={false} style={{ fontSize: 72, textAlign: "center", opacity: this.state.opacityAnimation, transform: [{ translateX: this.state.translateAnimation }] }}>Time's up!</Animated.Text>
             </View>
         )
