@@ -36,12 +36,11 @@ class PostgameRewardsScene {
     }
 
     update() {
-        console.log('updating');
+        
     }
 
     render() {
         if(this.renderer) {
-            console.log('rendering');
             this.renderer.render(this.scene, this.camera);
         }
     }
