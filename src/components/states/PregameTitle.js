@@ -1,0 +1,22 @@
+import React from 'react';
+import { View, Animated, Image } from 'react-native';
+import blockPartyLogo from '../../assets/images/BlockParty_logo.png';
+
+export default class PregameTitle extends React.Component {
+    state = {
+        scaleAnimation: new Animated.Value(1)
+    }
+
+    componentWillMount() {
+        Animated.timing(this.state.scaleAnimation, { toValue: 2, duration: 3000 }).start();
+    }
+
+    render() {
+        return(
+            <View style={{ width: "100%", height: "100%", flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                {/*<Animated.Image source={blockPartyLogo} style={{ width: "50%", flex: 1, transform: [{ scaleX: this.state.scaleAnimation }, { scaleY: this.state.scaleAnimation }] }} resizeMode={"contain"} />*/}
+                <Image source={blockPartyLogo} style={{ width: "100%", flex: 1 }} resizeMode={"contain"} />
+            </View>
+        )
+    }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "blockparty-client",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "react-native-scripts": "1.14.0",
+    "jest-expo": "^29.0.0",
+    "react-test-renderer": "16.3.1"
+  },
+  "main": "./node_modules/react-native-scripts/build/bin/crna-entry.js",
+  "scripts": {
+    "start": "react-native-scripts start",
+    "eject": "react-native-scripts eject",
+    "android": "react-native-scripts android",
+    "ios": "react-native-scripts ios",
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  },
+  "dependencies": {
+    "expo": "^29.0.0",
+    "expo-graphics": "^1.0.0-alpha.5",
+    "expo-three": "^3.0.0-alpha.2",
+    "firebase": "^5.1.0",
+    "react": "16.3.1",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-29.0.0.tar.gz",
+    "react-native-gifted-chat": "^0.4.3",
+    "react-router-native": "^4.2.0",
+    "react-router-navigation": "^1.0.0-rc.4"
+  }
+}
