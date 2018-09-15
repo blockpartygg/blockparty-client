@@ -180,6 +180,7 @@ const styles = StyleSheet.create({
     },
     gameStateText: { 
         fontSize: 20,
+        fontWeight: "bold",
         textAlign: "center",
         color: "white",
     },
@@ -201,5 +202,6 @@ const styles = StyleSheet.create({
     },
     chat: {
         flex: 1,
+        backgroundColor: "#570C76"
     }
 });
