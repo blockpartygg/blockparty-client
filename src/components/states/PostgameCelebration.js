@@ -45,7 +45,7 @@ export default class PostgameCelebration extends React.Component {
         );
 
         return(
-            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} pointerEvents="none">
                 <Text style={{ fontSize: 36 }}>The winner is...</Text>
                 <Text style={{ fontSize: 48 }}>{leaderboardData[0] && leaderboardData[0].name}</Text>
                 <FlatList data={leaderboardData} renderItem={renderItem} />

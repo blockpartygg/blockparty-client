@@ -17,7 +17,7 @@ export default class MinigameStart extends React.Component {
 
     render() {
         return(
-            <View style={{ flex: 1, justifyContent: "center" }}>
+            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} pointerEvents="none">
                 <Animated.Text selectable={false} style={{ fontSize: 96, textAlign: "center", opacity: this.state.opacityAnimation, transform: [{ translateX: this.state.translateAnimation }] }}>Ready...</Animated.Text>
             </View>
         )

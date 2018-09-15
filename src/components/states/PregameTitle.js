@@ -13,7 +13,7 @@ export default class PregameTitle extends React.Component {
 
     render() {
         return(
-            <View style={{ width: "100%", height: "100%", flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} pointerEvents="none">
                 {/*<Animated.Image source={blockPartyLogo} style={{ width: "50%", flex: 1, transform: [{ scaleX: this.state.scaleAnimation }, { scaleY: this.state.scaleAnimation }] }} resizeMode={"contain"} />*/}
                 <Image source={blockPartyLogo} style={{ width: "100%", flex: 1 }} resizeMode={"contain"} />
             </View>

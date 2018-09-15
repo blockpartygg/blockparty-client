@@ -30,7 +30,7 @@ export default class PregameCountdown extends React.Component {
 
     render() {
         return(
-            <View style={{ flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} pointerEvents="none">
                 <Text style={{ fontSize: 24 }}>Game starts in...</Text>
                 <Text style={{ fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'Roboto', fontSize: 182 }}>{this.state.timeRemaining}</Text>
             </View>

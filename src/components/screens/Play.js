@@ -91,22 +91,22 @@ export default class Play extends React.Component {
             return null;
         }
 
-        let overlay = this.setOverlay();
+        let overlay = this.setupOverlay();
 
         return(
-            <TouchableView onTouchesBegan={this.onTouchesBegan} style={{ flex: 1, overflow: 'hidden', zIndex: 0 }}>              
-                <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}>
+            <View pointerEvents="box-none" style={{ flex: 1 }}>              
+                <TouchableView onTouchesBegan={this.onTouchesBegan} style={{ flex: 1, overflow: "hidden" }}>
                     <GraphicsView ref={ref => (global.gameRef = this.ref = ref)} key="game" onContextCreate={this.onContextCreate} onRender={this.onRender} onResize={this.onResize} />
-                </View>
-                <View style={{ position: "absolute", left: 5, top: 30, zIndex: 10 }}>
+                </TouchableView>
+                <View style={{ position: "absolute", left: 5, top: 30 }}>
                     <Button title="Back" onPress={() => { this.props.history.goBack(); }} />
                 </View>  
                 {overlay}
-            </TouchableView>
+            </View>
         )
     }
 
-    setOverlay() {
+    setupOverlay() {
         let overlay;
         switch(this.state.state) {
             case "pregameCountdown":

@@ -45,7 +45,7 @@ export default class RoundResultsLeaderboard extends React.Component {
         );
 
         return(
-            <View style={{ flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "stretch" }}>
+            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} pointerEvents="none">
                 <View style={{ flex: 1}} />
                 <View style={{ flex: 8 }}>
                     <Text style={{ fontSize: 36, textAlign: "center" }}>Round {this.props.round}</Text>

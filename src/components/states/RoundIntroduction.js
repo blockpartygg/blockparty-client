@@ -12,7 +12,7 @@ export default class RoundIntroduction extends React.Component {
 
     render() {
         return(
-            <Animated.View style={{ flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center", transform: [{ scaleX: this.state.scaleAnimation }, { scaleY: this.state.scaleAnimation }] }}>
+            <Animated.View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} pointerEvents="none">
                 <Text style={{ fontSize: 36, textAlign: "center" }}>Round {this.props.round}</Text>
                 <Text style={{ fontSize: 48, textAlign: "center" }}>{this.props.minigame && this.props.minigame.name}</Text>
                 <Text style={{ fontSize: 48, textAlign: "center" }}>{this.props.mode && this.props.mode.name}</Text>

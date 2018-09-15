@@ -5,7 +5,7 @@ import { withRouter } from '../../Routing';
 class PostgameRewards extends React.Component {
     render() {
         return(
-            <View style={styles.container}>
+            <View style={styles.container} pointerEvents="none">
                 <Text style={styles.title}>Ron Solo</Text>
                 <View style={styles.avatar} />
                 <View style={styles.experience}>
@@ -30,10 +30,12 @@ class PostgameRewards extends React.Component {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center"
+    container: { 
+        position: "absolute", 
+        left: 0, 
+        right: 0, 
+        top: 0, 
+        bottom: 0 
     },
     title: {
         fontSize: 48,
