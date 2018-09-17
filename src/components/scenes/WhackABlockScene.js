@@ -42,6 +42,10 @@ class WhackABlockScene {
         });
     }
 
+    initialize() {
+        
+    }
+
     onTouchesBegan(state) {
         this.touch.x = (state.pageX / this.dimensions.width) * 2 - 1;
         this.touch.y = - (state.pageY / this.dimensions.height) * 2 + 1;

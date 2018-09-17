@@ -201,6 +201,9 @@ export default class Play extends React.Component {
                 this.scene = this.backgroundScene;
                 break;
             case "minigameStart":
+                this.scene = this.minigameScene;
+                this.scene.initialize();
+                break;
             case "minigamePlay":
             case "minigameEnd":
                 this.scene = this.minigameScene;

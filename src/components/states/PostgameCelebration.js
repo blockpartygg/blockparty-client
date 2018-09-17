@@ -37,7 +37,7 @@ export default class PostgameCelebration extends React.Component {
         }
 
         let renderItem = ({item}) => (
-            <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "stretch" }}>
                 <Text style={{ fontSize: 18, color: "white" }}>{item.rank}</Text>
                 <Text style={{ fontSize: 24, color: "white" }}>{item.name}</Text>
                 <Text style={{ fontSize: 18, color: "white" }}>{item.score}</Text>
@@ -45,10 +45,14 @@ export default class PostgameCelebration extends React.Component {
         );
 
         return(
-            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, justifyContent: "center", alignItems: "center" }} pointerEvents="none">
-                <Text style={{ fontSize: 36, color: "white" }}>The winner is...</Text>
-                <Text style={{ fontSize: 48, color: "white" }}>{leaderboardData[0] && leaderboardData[0].name}</Text>
-                <FlatList data={leaderboardData} renderItem={renderItem} />
+            <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, justifyContent: "center", alignItems: "stretch" }} pointerEvents="none">
+                <View style={{ flex: 1}} />
+                <View style={{ flex: 8 }}>
+                    <Text style={{ fontSize: 36, textAlign: "center", color: "white" }}>The winner is...</Text>
+                    <Text style={{ fontSize: 48, textAlign: "center", color: "white" }}>{leaderboardData[0] && leaderboardData[0].name}</Text>
+                    <FlatList data={leaderboardData} renderItem={renderItem} />
+                </View>
+                <View style={{ flex: 1 }} />
             </View>
         )
     }

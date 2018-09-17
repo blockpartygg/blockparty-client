@@ -86,6 +86,27 @@ class RedLightGreenLightScene {
         })
 
         this.sendStateInterval = setInterval(() => { this.sendPlayerState(); }, 16);
+
+        this.initialize();
+    }
+
+    initialize() {
+        this.player.positionY = 0;
+        this.player.velocityY = 0;
+        this.playerMesh.position.y = this.player.positionY;
+        
+        this.camera.position.x = 0;
+        this.camera.position.y = this.player.positionY - 5;
+        this.camera.position.z = 5;
+
+        this.otherPlayers.forEach(player => {
+            player.positionY = 0;
+            player.velocityY = 0;
+            player.mesh.position.y = player.positionY;
+        });
+
+        this.greenLight = true;
+        this.scene.background = new THREE.Color(0xffffff);
     }
 
     sendPlayerState() {
