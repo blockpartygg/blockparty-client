@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Animated } from 'react-native';
-import blockPartyLogo from '../../assets/images/BlockParty_logo.png';
+import blockPartyLogo from '../../assets/images/BlockPartyLogoSquareText.png';
 
 export default class PregameTitle extends React.Component {
     state = {

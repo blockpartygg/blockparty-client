@@ -1,6 +1,5 @@
 import React from "react";
 import { StatusBar } from "react-native";
-//import AssetUtils from './AssetUtils';
 import { AppLoading, Asset } from 'expo';
 import { Router, Switch, Route } from './Routing';
 import Title from './components/screens/Title';
@@ -13,7 +12,7 @@ export default class App extends React.Component {
     }
 
     loadAssetsAsync = async () => {
-        const imageAssets = this.cacheImages([require('./assets/images/BlockParty_logo.png')])
+        const imageAssets = this.cacheImages([require('./assets/images/BlockPartyLogoSquareText.png')])
         await Promise.all([...imageAssets]);
     }
 

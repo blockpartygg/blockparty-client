@@ -1,5 +1,19 @@
 {
   "expo": {
-    "sdkVersion": "29.0.0"
+    "name": "Block Party",
+    "description": "The minigame network",
+    "slug": "block-party",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "sdkVersion": "29.0.0",
+    "ios": {
+      "bundleIdentifier": "com.BlockPartyGG.BlockParty"
+    },
+    "icon": "./src/assets/icons/BlockPartyIcon.png",
+    "splash": {
+      "image": "./src/assets/images/BlockPartySplash.png",
+      "backgroundColor": "#570C76",
+      "resizeMode": "contain"
+    }
   }
 }

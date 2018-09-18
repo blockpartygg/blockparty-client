@@ -35,6 +35,11 @@ export default class Play extends React.Component {
     scene = null;
     overlay = null;
 
+    constructor(props) {
+        super(props);
+        this.startPurchase = this.startPurchase.bind(this);
+    }
+
     componentWillMount() {
         firebase.auth().onAuthStateChanged(user => {
             if(!user) {
@@ -84,6 +89,10 @@ export default class Play extends React.Component {
                 this.setState({ mode: mode });
             }
         });
+    }
+
+    startPurchase() {
+        this.postgameRewardsScene.startPurchase();
     }
 
     render() {
@@ -143,7 +152,7 @@ export default class Play extends React.Component {
                 overlay = <PostgameCelebration />
                 break;
             case "postgameRewards":
-                overlay = <PostgameRewardsWithRouter />
+                overlay = <PostgameRewardsWithRouter startPurchase={this.startPurchase} />
                 break;
             default:
                 console.log(`invalid game state: ${this.state.state}`);

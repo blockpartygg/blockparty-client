@@ -1,6 +1,14 @@
+import { TweenLite } from 'gsap';
 import THREE from '../../THREE';
+import '../../TeapotBufferGeometry';
 
 class PostgameRewardsScene {
+    avatar = {
+        tween: null,
+        scaleValue: 1,
+        scaleValue2: 0
+    }
+
     constructor(renderer) {
         this.renderer = renderer;
         this.scene = new THREE.Scene();
@@ -31,6 +39,14 @@ class PostgameRewardsScene {
         this.avatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
         this.scene.add(this.avatarMesh);
 
+        let avatarGeometry2 = new THREE.TeapotBufferGeometry(0.5);
+        let avatarMaterial2 = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
+        this.avatarMesh2 = new THREE.Mesh(avatarGeometry2, avatarMaterial2);
+        this.avatarMesh2.scale.x = 0;
+        this.avatarMesh2.scale.y = 0;
+        this.avatarMesh2.scale.z = 0;
+        this.scene.add(this.avatarMesh2);
+
         this.blocks = [];
         for(let i = 0; i < 100; i++) {
             let size = Math.random() * 3;
@@ -41,6 +57,7 @@ class PostgameRewardsScene {
             this.blocks[i].mesh = new THREE.Mesh(blockGeometry, blockMaterial);
             this.blocks[i].mesh.position.x = Math.random() * 50 - 25;
             this.blocks[i].mesh.position.y = Math.random() * 50 - 25;
+            this.blocks[i].mesh.position.z = -7;
             this.blocks[i].mesh.rotation.x = Math.random() * 2 * Math.PI;
             this.blocks[i].mesh.rotation.y = Math.random() * 2 * Math.PI;
             this.scene.add(this.blocks[i].mesh);
@@ -49,6 +66,11 @@ class PostgameRewardsScene {
 
     onTouchesBegan(state) {
         
+    }
+
+    startPurchase() {
+        TweenLite.to(this.avatar, 2, { scaleValue: 0 });
+        TweenLite.to(this.avatar, 2, { scaleValue2: 1, delay: 3 });
     }
 
     update() {
@@ -64,6 +86,14 @@ class PostgameRewardsScene {
             this.blocks[i].mesh.rotation.x += 0.01;
             this.blocks[i].mesh.rotation.y += 0.01;
         }
+
+        this.avatarMesh.scale.x = this.avatar.scaleValue;
+        this.avatarMesh.scale.y = this.avatar.scaleValue;
+        this.avatarMesh.scale.z = this.avatar.scaleValue;
+
+        this.avatarMesh2.scale.x = this.avatar.scaleValue2;
+        this.avatarMesh2.scale.y = this.avatar.scaleValue2;
+        this.avatarMesh2.scale.z = this.avatar.scaleValue2;
     }
 
     render() {
