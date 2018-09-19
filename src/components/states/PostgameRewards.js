@@ -88,8 +88,8 @@ const styles = StyleSheet.create({
         color: "white",
     },
     avatar: {
-        width: 300,
-        height: 300,
+        width: 400,
+        height: 400,
         backgroundColor: "transparent",
     },
     experience: {
