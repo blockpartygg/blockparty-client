@@ -36,6 +36,7 @@ export default class Play extends React.Component {
 
     scene = null;
     overlay = null;
+    initializedMinigame = false;
 
     constructor(props) {
         super(props);
@@ -218,12 +219,16 @@ export default class Play extends React.Component {
             case "minigameStart":
                 this.scene = this.minigameScene;
                 if(this.scene) {
-                    this.scene.initialize();    
+                    if(!this.initializedMinigame) {
+                        this.scene.initialize();    
+                        this.initializedMinigame = true;
+                    }
                 }
                 break;
             case "minigamePlay":
             case "minigameEnd":
                 this.scene = this.minigameScene;
+                this.initializedMinigame = false;
                 break;
             case "roundResultsScoreboard":
             case "roundResultsLeaderboard":

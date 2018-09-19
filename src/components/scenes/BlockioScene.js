@@ -97,8 +97,8 @@ class BlockioScene {
     }
 
     initialize() {
-        this.player.positionX = 0;
-        this.player.positionY = 0;
+        this.player.positionX = Math.random() * 100 - 50;
+        this.player.positionY = Math.random() * 100 - 50;
         this.player.velocityX = 0;
         this.player.velocityY = 0;
         this.playerMesh.position.x = this.player.positionX;
