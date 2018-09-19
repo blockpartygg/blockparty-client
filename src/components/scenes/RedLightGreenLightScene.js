@@ -14,7 +14,7 @@ class RedLightGreenLightScene {
 
     constructor(renderer) {
         this.renderer = renderer;
-        this.scene = new THREE.Scene();
+        this.scene = new THREE.Scene(0xf0f0f0);
         this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
         this.camera.position.x = 0;
         this.camera.position.y = -5;
@@ -33,20 +33,9 @@ class RedLightGreenLightScene {
         this.backgroundMesh = new THREE.LineSegments(backgroundGeometry, backgroundMaterial);
         this.scene.add(this.backgroundMesh);
 
-        const ambientLight = new THREE.AmbientLight( 0x404040 );
-        this.scene.add(ambientLight);
-
-        let directionalLight1 = new THREE.DirectionalLight( 0xffffff );
-        directionalLight1.position.x = Math.random() - 0.5;
-        directionalLight1.position.y = Math.random() - 0.5;
-        directionalLight1.position.z = Math.random() - 0.5;
-        this.scene.add(directionalLight1);
-
-        let directionalLight2 = new THREE.DirectionalLight( 0x808080 );
-        directionalLight2.position.x = Math.random() - 0.5;
-        directionalLight2.position.y = Math.random() - 0.5;
-        directionalLight2.position.z = Math.random() - 0.5;
-        this.scene.add(directionalLight2);
+        let light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(1, 1, 1).normalize();
+        this.scene.add(light);
         
         const playerGeometry = new THREE.BoxGeometry();
         const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
