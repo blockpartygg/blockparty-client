@@ -22,6 +22,7 @@ import PostgameRewardsWithRouter from '../states/PostgameRewards';
 import BackgroundScene from '../scenes/BackgroundScene';
 import RedLightGreenLightScene from '../scenes/RedLightGreenLightScene';
 import WhackABlockScene from '../scenes/WhackABlockScene';
+import BlockioScene from '../scenes/BlockioScene';
 import PostgameRewardsScene from '../scenes/PostgameRewardsScene';
 
 export default class Play extends React.Component {
@@ -105,7 +106,7 @@ export default class Play extends React.Component {
 
         return(
             <View pointerEvents="box-none" style={{ flex: 1 }}>              
-                <TouchableView onTouchesBegan={this.onTouchesBegan} style={{ flex: 1, overflow: "hidden" }}>
+                <TouchableView onTouchesBegan={this.onTouchesBegan} onTouchesMoved={this.onTouchesMoved} onTouchesEnded={this.onTouchesEnded} style={{ flex: 1, overflow: "hidden" }}>
                     <GraphicsView ref={ref => (global.gameRef = this.ref = ref)} key="game" onContextCreate={this.onContextCreate} onRender={this.onRender} onResize={this.onResize} />
                 </TouchableView>
                 <View style={{ position: "absolute", left: 5, top: 30 }}>
@@ -172,6 +173,7 @@ export default class Play extends React.Component {
         this.postgameRewardsScene = new PostgameRewardsScene(this.renderer);
         this.redLightGreenLightScene = new RedLightGreenLightScene(this.renderer);
         this.whackABlockScene = new WhackABlockScene(this.renderer);
+        this.blockioScene = new BlockioScene(this.renderer);
     }
 
     onResize = () => {
@@ -196,6 +198,9 @@ export default class Play extends React.Component {
                 case "Block Blaster":
                     this.minigameScene = this.whackABlockScene;
                     break;
+                case "Block.io":
+                    this.minigameScene = this.blockioScene;
+                    break;
                 default:
                     this.minigameScene = null;
                     break;
@@ -212,7 +217,9 @@ export default class Play extends React.Component {
                 break;
             case "minigameStart":
                 this.scene = this.minigameScene;
-                this.scene.initialize();
+                if(this.scene) {
+                    this.scene.initialize();    
+                }
                 break;
             case "minigamePlay":
             case "minigameEnd":
@@ -234,6 +241,22 @@ export default class Play extends React.Component {
     onTouchesBegan = state => {
         if(this.state.state === "minigamePlay") {
             this.scene.onTouchesBegan(state);
+        }
+    }
+
+    onTouchesMoved = state => {
+        if(this.state.state === "minigamePlay") {
+            if(this.scene.onTouchesMoved) {
+                this.scene.onTouchesMoved(state);
+            }
+        }
+    }
+
+    onTouchesEnded = state => {
+        if(this.state.state === "minigamePlay") {
+            if(this.scene.onTouchesEnded) {
+                this.scene.onTouchesEnded(state);
+            }
         }
     }
 
