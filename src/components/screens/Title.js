@@ -23,7 +23,7 @@ export default class Title extends React.Component {
             firebase.database().ref('.info/connected').on('value', snapshot => {
                 if(snapshot.val()) {
                     firebase.database().ref('players/' + firebase.auth().currentUser.uid).onDisconnect().remove();
-                    firebase.database().ref('players/' + firebase.auth().currentUser.uid).set({ name: this.state.name });
+                    firebase.database().ref('players/' + firebase.auth().currentUser.uid).set({ name: this.state.name, playing: true });
                 }
             });
             this.props.history.push('/home');
