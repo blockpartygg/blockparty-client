@@ -13,12 +13,10 @@ class WhackABlockScene {
 
     constructor(renderer) {
         this.renderer = renderer;
-        this.scene = new THREE.Scene(0xf0f0f0);
-        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
-        let light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(1, 1, 1).normalize();
-        this.scene.add(light);
+        this.setupScene();
+
+        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
         this.raycaster = new THREE.Raycaster();
 
@@ -40,6 +38,21 @@ class WhackABlockScene {
         firebase.database().ref('minigame/whackABlock/blocks').on('child_removed', snapshot => {
             this.scene.remove(this.blocks[snapshot.key]);
         });
+    }
+
+    setupScene() {
+        this.scene = new THREE.Scene();
+        let sceneColor = new THREE.Color(0x888888);
+        this.scene.background = sceneColor;
+        this.scene.fog = new THREE.Fog(sceneColor, 1, 1000);
+
+        let directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight1.position.set(0, 0, 1).normalize();
+        this.scene.add(directionalLight1);
+
+        let directionalLight2 = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight2.position.set(0, 0, -1).normalize();
+        this.scene.add(directionalLight2);
     }
 
     initialize() {

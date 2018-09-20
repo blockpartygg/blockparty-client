@@ -23,7 +23,9 @@ class BlockioScene {
 
     constructor(renderer) {
         this.renderer = renderer;
-        this.scene = new THREE.Scene(0xf0f0f0);
+        
+        this.setupScene();
+
         this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
         this.camera.position.x = 0;
         this.camera.position.y = -5;
@@ -47,10 +49,6 @@ class BlockioScene {
         const backgroundMaterial = new THREE.MeshBasicMaterial({ color: "black" });
         this.backgroundMesh = new THREE.LineSegments(backgroundGeometry, backgroundMaterial);
         this.scene.add(this.backgroundMesh);
-
-        let light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(1, 1, 1).normalize();
-        this.scene.add(light);
         
         const playerGeometry = new THREE.BoxGeometry();
         const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
@@ -94,6 +92,17 @@ class BlockioScene {
         this.sendStateInterval = setInterval(() => { this.sendPlayerState(); }, 16);
 
         this.initialize();
+    }
+
+    setupScene() {
+        this.scene = new THREE.Scene();
+        let sceneColor = new THREE.Color(0xf0f0f0);
+        this.scene.background = sceneColor;
+        this.scene.fog = new THREE.Fog(sceneColor, 1, 500);
+
+        let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(0, 1, 1).normalize();
+        this.scene.add(directionalLight);
     }
 
     initialize() {

@@ -3,9 +3,9 @@ import firebase from '../../Firebase';
 
 class RedLightGreenLightScene {
     player = {
-        positionY: 0,
-        velocityY: 0,
-        tapAccelerationY: 5,
+        positionZ: 0,
+        velocityZ: 0,
+        tapAccelerationZ: 5,
     }
     
     greenLight = true;
@@ -14,28 +14,35 @@ class RedLightGreenLightScene {
 
     constructor(renderer) {
         this.renderer = renderer;
-        this.scene = new THREE.Scene(0xf0f0f0);
-        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        this.camera.position.x = 0;
-        this.camera.position.y = -5;
-        this.camera.position.z = 5;
-        this.camera.lookAt(new THREE.Vector3());
-        this.camera.rotation.z = 0;
 
-        const backgroundGeometry = new THREE.Geometry();
-        for(let y = 0; y <= 1000; y += 10) {
-            backgroundGeometry.vertices.push(
-                new THREE.Vector3(-1000, y, 0),
-                new THREE.Vector3(1000, y, 0)
+        this.setupScene();
+
+        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        this.cameraOffset = new THREE.Vector3(0, 1, -5);
+        this.camera.position.x = this.cameraOffset.x;
+        this.camera.position.y = this.cameraOffset.y;
+        this.camera.position.z = this.cameraOffset.z;
+        this.camera.lookAt(new THREE.Vector3());
+        this.camera.rotation.z = Math.PI;
+
+        const groundGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
+        const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x333333, overdraw: 0.5 });
+        this.groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
+        this.groundMesh.position.y = -0.5;
+        this.groundMesh.rotation.x = -Math.PI / 2;
+        this.scene.add(this.groundMesh);
+
+        const lineGeometry = new THREE.Geometry();
+        for(let z = 0; z <= 1000; z += 10) {
+            lineGeometry.vertices.push(
+                new THREE.Vector3(-500, 0, z),
+                new THREE.Vector3(500, 0, z)
             );
         }
-        const backgroundMaterial = new THREE.MeshBasicMaterial({ color: "black" });
-        this.backgroundMesh = new THREE.LineSegments(backgroundGeometry, backgroundMaterial);
-        this.scene.add(this.backgroundMesh);
-
-        let light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(1, 1, 1).normalize();
-        this.scene.add(light);
+        const lineMaterial = new THREE.MeshBasicMaterial({ color: "white" });
+        this.lineMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
+        this.lineMesh.position.y = -0.5;
+        this.scene.add(this.lineMesh);
         
         const playerGeometry = new THREE.BoxGeometry();
         const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
@@ -63,8 +70,8 @@ class RedLightGreenLightScene {
                     return;
                 }
                 if(this.otherPlayers[index] && player.val()) {
-                    this.otherPlayers[index].positionY = player.val().positionY;
-                    this.otherPlayers[index].velocityY = player.val().velocityY;
+                    this.otherPlayers[index].positionZ = player.val().positionZ;
+                    this.otherPlayers[index].velocityZ = player.val().velocityZ;
                     index++;
                 }
             });
@@ -74,24 +81,41 @@ class RedLightGreenLightScene {
             this.greenLight = greenLight;
         })
 
-        this.sendStateInterval = setInterval(() => { this.sendPlayerState(); }, 16);
+        this.sendStateInterval = setInterval(() => { this.sendPlayerState(); }, 1000 / 60);
 
         this.initialize();
     }
 
-    initialize() {
-        this.player.positionY = 0;
-        this.player.velocityY = 0;
-        this.playerMesh.position.y = this.player.positionY;
+    setupScene() {
+        this.scene = new THREE.Scene();
+        this.sceneGreenColor = new THREE.Color(0x00ff00);
+        this.sceneGreenFog = new THREE.Fog(this.sceneGreenColor, 1, 100);
+        this.sceneRedColor = new THREE.Color(0xff0000);
+        this.sceneRedFog = new THREE.Fog(this.sceneRedColor, 1, 100);
+        this.scene.background = this.sceneGreenColor;
+        this.scene.fog = this.sceneGreenFog;
         
-        this.camera.position.x = 0;
-        this.camera.position.y = this.player.positionY - 5;
-        this.camera.position.z = 5;
+        let hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.9);
+        this.scene.add(hemisphereLight);
+
+        let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(0, 0, -1).normalize();
+        this.scene.add(directionalLight);
+    }
+
+    initialize() {
+        this.player.positionZ = 0;
+        this.player.velocityZ = 0;
+        this.playerMesh.position.z = this.player.positionZ;
+        
+        this.camera.position.x = this.cameraOffset.x;
+        this.camera.position.y = this.cameraOffset.y;
+        this.camera.position.z = this.player.positionZ + this.cameraOffset.z;
 
         this.otherPlayers.forEach(player => {
-            player.positionY = 0;
-            player.velocityY = 0;
-            player.mesh.position.y = player.positionY;
+            player.positionZ = 0;
+            player.velocityZ = 0;
+            player.mesh.position.z = player.positionZ;
         });
 
         this.greenLight = true;
@@ -113,33 +137,35 @@ class RedLightGreenLightScene {
 
     tap() {
         if(this.greenLight) {
-            this.player.velocityY = this.player.tapAccelerationY;
+            this.player.velocityZ = this.player.tapAccelerationZ;
         }
         else {
-            this.player.velocityY = -2 * this.player.tapAccelerationY;
+            this.player.velocityZ = -2 * this.player.tapAccelerationZ;
         }
     }
 
     update(delta) {
-        this.player.velocityY *= 0.95;
-        this.player.positionY += this.player.velocityY * delta;
-        if(this.player.positionY <= 0) {
-            this.player.positionY = 0;
+        this.player.velocityZ *= 0.95;
+        this.player.positionZ += this.player.velocityZ * delta;
+        if(this.player.positionZ <= 0) {
+            this.player.positionZ = 0;
         }
-        this.playerMesh.position.y = this.player.positionY;
-        this.camera.position.x = 0;
-        this.camera.position.y = this.player.positionY - 5;
-        this.camera.position.z = 5;
+        this.playerMesh.position.z = this.player.positionZ;
+        this.camera.position.x = this.cameraOffset.x;
+        this.camera.position.y = this.cameraOffset.y;
+        this.camera.position.z = this.player.positionZ + this.cameraOffset.z;
 
         this.otherPlayers.forEach(player => {
-            player.mesh.position.y = player.positionY;
+            player.mesh.position.z = player.positionZ;
         });
 
         if(this.greenLight) {
-            this.scene.background = new THREE.Color(0xffffff);
+            this.scene.background = this.sceneGreenColor;
+            this.scene.fog = this.sceneGreenFog;
         }
         else {
-            this.scene.background = new THREE.Color(0xff0000);
+            this.scene.background = this.sceneRedColor;
+            this.scene.fog = this.sceneRedFog;
         }
     }
 
