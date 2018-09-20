@@ -101,7 +101,7 @@ class BlockioScene {
         this.scene.fog = new THREE.Fog(sceneColor, 1, 500);
 
         let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(0, 1, 1).normalize();
+        directionalLight.position.set(0, 0, 1).normalize();
         this.scene.add(directionalLight);
     }
 
