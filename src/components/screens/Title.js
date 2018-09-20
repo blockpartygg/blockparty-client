@@ -33,6 +33,14 @@ export default class Title extends React.Component {
         event.preventDefault();
     }
 
+    onPressTermsOfUse = () => {
+        this.props.history.push('/web');
+    }
+
+    onPressPrivacyPolicy = () => {
+        this.props.history.push('/web');
+    }
+
     render() {
         const isSignInDisabled = this.state.name === '';
 
@@ -47,6 +55,9 @@ export default class Title extends React.Component {
                         <TextInput value={this.state.name} onChangeText={text => { this.setState({ name: text }); }} placeholder="Player name" style={{ minWidth: 200, height: 40, fontSize: 24, textAlign: "center", backgroundColor: "#eeeeee", borderRadius: 5, margin: 10 }} />
                         <Button disabled={isSignInDisabled} title="Join the party!" onPress={this.handleSignIn} />
                         <Text>{this.state.error && this.state.error.message}</Text>
+                    </View>
+                    <View style={{ position: "absolute", bottom: 50 }}>
+                        <Text style={{ textAlign: "center", color: "white" }}>By playing you agree to the{'\n'}<Text onPress={this.onPressTermsOfUse} style={{ fontWeight: "bold" }}>Terms of Use</Text> and <Text onPress={this.onPressPrivacyPolicy} style={{ fontWeight: "bold" }}>Privacy Policy</Text></Text>
                     </View>
                 </KeyboardAvoidingView>
             </Animated.View>

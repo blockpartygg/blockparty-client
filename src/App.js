@@ -5,6 +5,7 @@ import { Router, Switch, Route } from './Routing';
 import Title from './components/screens/Title';
 import Home from './components/screens/Home';
 import Play from './components/screens/Play';
+import Web from './components/screens/Web';
 
 export default class App extends React.Component {
     state = {
@@ -39,6 +40,7 @@ export default class App extends React.Component {
                         <Route exact path="/" component={Title} />
                         <Route path="/home" component={Home} />
                         <Route path="/play" component={Play} />
+                        <Route path="/web" component={Web} />
                     </Switch>
             </Router>
         );
