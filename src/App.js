@@ -5,6 +5,8 @@ import { Router, Switch, Route } from './Routing';
 import Title from './components/screens/Title';
 import Home from './components/screens/Home';
 import Play from './components/screens/Play';
+import SignIn from './components/screens/SignIn';
+import SignUp from './components/screens/SignUp';
 import Web from './components/screens/Web';
 
 export default class App extends React.Component {
@@ -13,7 +15,7 @@ export default class App extends React.Component {
     }
 
     loadAssetsAsync = async () => {
-        const imageAssets = this.cacheImages([require('./assets/images/BlockPartyLogoSquareText.png')])
+        const imageAssets = this.cacheImages([require('./assets/images/BlockPartyLogoSquare.png')])
         await Promise.all([...imageAssets]);
     }
 
@@ -40,6 +42,8 @@ export default class App extends React.Component {
                         <Route exact path="/" component={Title} />
                         <Route path="/home" component={Home} />
                         <Route path="/play" component={Play} />
+                        <Route path="/signIn" component={SignIn} />
+                        <Route path="/signUp" component={SignUp} />
                         <Route path="/web" component={Web} />
                     </Switch>
             </Router>

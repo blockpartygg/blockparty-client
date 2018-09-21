@@ -84,6 +84,13 @@ export default class Home extends React.Component {
         });
     }
 
+    onPressSignOut = () => {
+        firebase.database().ref('players/' + this.state.uid + '/playing').remove();
+        firebase.auth().signOut().then(() => {
+            this.props.history.push('/');
+        });
+    }
+
     onSend = messages => {
         for(let i = 0; i < messages.length; i++) {
             const { text, user } = messages[i];
@@ -132,7 +139,7 @@ export default class Home extends React.Component {
         return(
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <Button title="Sign out" onPress={() => { this.props.history.goBack(); }} style={styles.signOutButton} />
+                    <Button title="Sign out" onPress={this.onPressSignOut} style={styles.signOutButton} />
                     <View style={styles.gameState}>
                         <Text style={styles.gameStateText}>{stateString}</Text>
                         <Button title="Play" onPress={() => { this.props.history.push('/play'); }} style={{ flex: 1 }} />
