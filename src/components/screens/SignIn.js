@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, KeyboardAvoidingView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { AsyncStorage, View, Text, KeyboardAvoidingView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import firebase from '../../Firebase';
 
@@ -20,11 +20,20 @@ export default class SignIn extends React.Component {
                     firebase.database().ref('players/' + firebase.auth().currentUser.uid).update({ playing: true });
                 }
             });
+            this.setPlayerAccountCreated();
             this.props.history.push('/home');
         }).catch(error => {
             this.setState({ signInError: error });
         });
         event.preventDefault();
+    }
+
+    setPlayerAccountCreated = async () => {
+        try {
+            await AsyncStorage.setItem('playerAccountCreated', 'true');
+        } catch(error) {
+            console.log(error);
+        }
     }
 
     handlePlayAsGuest = (event) => {
@@ -125,6 +134,7 @@ const styles = StyleSheet.create({
     instructionsText: {
         width: "100%",
         fontSize: 24,
+        fontWeight: "bold",
         color: "white"
     },
     formTextInput: {
@@ -150,17 +160,18 @@ const styles = StyleSheet.create({
         borderColor: "#B4287D" 
     },
     signInButtonText: { 
-        fontSize: 24, 
+        fontSize: 24,
+        fontWeight: "bold",
         textAlign: "center", 
         color: "white" 
     },
     signUpLabel: { 
-        fontSize: 20, 
+        fontSize: 20,
         color: "white" 
     },
     signUpLink: { 
         fontSize: 20, 
+        fontWeight: "bold",
         color: "#FA50B2", 
-        fontWeight: "bold" 
     },
 });

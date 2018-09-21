@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, Text, TouchableOpacity, Animated } from 'react-native';
+import { AsyncStorage, View, Image, Text, TouchableOpacity, Animated } from 'react-native';
+import firebase from '../../Firebase';
 import blockPartyLogo from '../../assets/images/BlockPartyLogoSquare.png';
 
 export default class Title extends React.Component {
@@ -8,19 +9,40 @@ export default class Title extends React.Component {
         opacityAnimation: new Animated.Value(0)
     }
 
+    playDestination = 'signIn';
+
     componentWillMount() {
+        firebase.auth().onAuthStateChanged(user => {
+            if(user) {
+                this.playDestination = 'home';
+            }
+            else {
+                this.getPlayerAccountCreated();
+            }
+        });
+
         Animated.parallel([
             Animated.timing(this.state.translateAnimation, { toValue: 0, duration: 1000 }),
             Animated.timing(this.state.opacityAnimation, { toValue: 1, duration: 1000 }),
         ]).start();
     }
 
-    handlePlay = () => {
-        this.props.history.push('signIn');
+    getPlayerAccountCreated = async () => {
+        try {
+            const playerAccountCreated = await AsyncStorage.getItem('playerAccountCreated');
+            if(playerAccountCreated === 'true') {
+                this.playDestination = 'signIn';
+            }
+            else {
+                this.playDestination = 'signUp';
+            }
+        } catch(error) {
+            console.log(error);
+        }
     }
 
-    onPressSignUp = () => {
-        this.props.history.push('signUp');
+    handlePlay = () => {
+        this.props.history.push(this.playDestination);
     }
 
     onPressTermsOfUse = () => {
@@ -39,10 +61,8 @@ export default class Title extends React.Component {
                 </View>
                 <View style={{ width: "80%", flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
                     <TouchableOpacity onPress={this.handlePlay} style={{ width: "100%", margin: 10, padding: 10, backgroundColor: "#EE3AAF", borderWidth: 5, borderColor: "#B4287D" }}>
-                        <Text style={{ fontSize: 24, textAlign: "center", color: "white" }}>Join the Party!</Text>
+                        <Text style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", color: "white" }}>Join the Party!</Text>
                     </TouchableOpacity>
-                    <Text style={{ fontSize: 20, color: "white" }}>Don't have an account?</Text>
-                    <Text onPress={this.onPressSignUp} style={{ fontSize: 20, color: "#FA50B2", fontWeight: "bold" }}>Sign up!</Text>
                 </View>
                 <View style={{ position: "absolute", bottom: 50 }}>
                     <Text style={{ textAlign: "center", color: "#B378CC" }}>By playing you agree to the{'\n'}<Text onPress={this.onPressTermsOfUse} style={{ fontWeight: "bold" }}>Terms of Service</Text> and <Text onPress={this.onPressPrivacyPolicy} style={{ fontWeight: "bold" }}>Privacy Policy</Text></Text>
