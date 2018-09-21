@@ -56,9 +56,6 @@ export default class SignIn extends React.Component {
             this.state.email === '' ||
             this.state.password === ''
         );
-        const isPlayAsGuestDisabled = (
-            this.state.name === ''
-        );
 
         return(
             <View style={styles.container}>
@@ -70,14 +67,14 @@ export default class SignIn extends React.Component {
                     </View>
                     <View style={styles.form}>
                         <Text style={styles.instructionsText}>Welcome back!</Text>
-                        <Text style={styles.instructionsText}>Sign in to join the Party</Text>
+                        <Text style={styles.instructionsText}>Sign in to join the Party.</Text>
                         <TextInput value={this.state.email} onChangeText={text => { this.setState({ email: text }); }} placeholder="Email address" keyboardType="email-address" textContentType="username" style={styles.formTextInput} />
                         <TextInput value={this.state.password} onChangeText={text => { this.setState({ password: text }); }} placeholder="Password" secureTextEntry textContentType="password" style={styles.formTextInput} />
                         <Text style={styles.instructionsText}>{this.state.signInError && this.state.signInError.message}</Text>
                         <Text style={styles.instructionsText}>Or...</Text>
                         <TextInput value={this.state.name} onChangeText={text => { this.setState({ name: text }); }} placeholder="Player name" style={styles.formTextInput} />
-                        <Text onPress={this.handlePlayAsGuest} disabled={isPlayAsGuestDisabled} style={styles.playAsGuestLinkText}>Play as Guest</Text>
                         <Text style={styles.instructionsText}>{this.state.playerAsGuestError && this.state.playAsGuestError.message}</Text>
+                        <Text onPress={this.handlePlayAsGuest} style={styles.playAsGuestLinkText}>Play as Guest</Text>
                         <TouchableOpacity onPress={this.handleSignIn} disabled={isSignInDisabled} style={styles.signInButton}>
                             <Text style={styles.signInButtonText}>Sign in</Text>
                         </TouchableOpacity>
@@ -97,7 +94,7 @@ const styles = StyleSheet.create({
     },
     header: {
         position: "absolute",
-        left: "5%",
+        left: "10%",
         right: 0,
         top: 50,
         height: 50,
@@ -119,16 +116,16 @@ const styles = StyleSheet.create({
         height: 12,
         backgroundColor: "#FA50B2"
     },
+    form: {
+        width: "80%",
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center"
+    },
     instructionsText: {
         width: "100%",
         fontSize: 24,
         color: "white"
-    },
-    form: {
-        width: "90%",
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center"
     },
     formTextInput: {
         width: "100%",
