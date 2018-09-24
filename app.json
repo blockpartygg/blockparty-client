@@ -3,7 +3,7 @@
     "name": "Block Party",
     "description": "The minigame network",
     "slug": "block-party",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "orientation": "portrait",
     "sdkVersion": "29.0.0",
     "ios": {
