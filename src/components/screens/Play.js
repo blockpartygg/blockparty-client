@@ -98,6 +98,11 @@ export default class Play extends React.Component {
         this.postgameRewardsScene.startPurchase();
     }
 
+    onPressBack = () => { 
+        firebase.database().ref('players/' + firebase.auth().currentUser.uid).update({ playing: false });
+        this.props.history.goBack(); 
+    }
+
     render() {
         if(!this.state) {
             return null;
@@ -111,7 +116,7 @@ export default class Play extends React.Component {
                     <GraphicsView ref={ref => (global.gameRef = this.ref = ref)} key="game" onContextCreate={this.onContextCreate} onRender={this.onRender} onResize={this.onResize} />
                 </TouchableView>
                 <View style={{ position: "absolute", left: 5, top: 30 }}>
-                    <FontAwesome.Button onPress={() => { this.props.history.goBack(); }} name="chevron-left" color="white" backgroundColor="transparent" />
+                    <FontAwesome.Button onPress={this.onPressBack} name="chevron-left" color="white" backgroundColor="transparent" />
                 </View>  
                 {overlay}
             </View>

@@ -14,10 +14,11 @@ export default class SignUp extends React.Component {
 
     handleSignUp = (event) => {
         firebase.auth().createUserWithEmailAndPassword(this.state.email, this.state.password).then(() => {
+            firebase.database().ref('players/' + firebase.auth().currentUser.uid).set({ name: this.state.name, currency: 0 });
             firebase.database().ref('.info/connected').on('value', snapshot => {
                 if(snapshot.val()) {
-                    firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/playing').onDisconnect().remove();
-                    firebase.database().ref('players/' + firebase.auth().currentUser.uid).set({ name: this.state.name, currency: 0, playing: true });
+                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).onDisconnect().remove();
+                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).set(true);
                 }
             });
             this.setPlayerAccountCreated();

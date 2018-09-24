@@ -42,6 +42,14 @@ export default class Title extends React.Component {
     }
 
     handlePlay = () => {
+        if(this.playDestination === 'home') {
+            firebase.database().ref('.info/connected').on('value', snapshot => {
+                if(snapshot.val()) {
+                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).onDisconnect().remove();
+                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).set(true);
+                }
+            });
+        }
         this.props.history.push(this.playDestination);
     }
 

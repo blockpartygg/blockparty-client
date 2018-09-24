@@ -85,10 +85,14 @@ export default class Home extends React.Component {
     }
 
     onPressSignOut = () => {
-        firebase.database().ref('players/' + this.state.uid + '/playing').remove();
         firebase.auth().signOut().then(() => {
             this.props.history.push('/');
         });
+    }
+
+    onPressPlay = () => { 
+        firebase.database().ref('players/' + firebase.auth().currentUser.uid).update({ playing: true });
+        this.props.history.push('/play'); 
     }
 
     onSend = messages => {
@@ -142,7 +146,7 @@ export default class Home extends React.Component {
                     <Button title="Sign out" onPress={this.onPressSignOut} style={styles.signOutButton} />
                     <View style={styles.gameState}>
                         <Text style={styles.gameStateText}>{stateString}</Text>
-                        <Button title="Play" onPress={() => { this.props.history.push('/play'); }} style={{ flex: 1 }} />
+                        <Button title="Play" onPress={this.onPressPlay} style={{ flex: 1 }} />
                     </View>
                     <View style={styles.playerBadge}>
                         <Text style={styles.playerBadgeName}>{this.state.name}</Text>

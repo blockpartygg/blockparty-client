@@ -16,8 +16,8 @@ export default class SignIn extends React.Component {
         firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password).then(() => {
             firebase.database().ref('.info/connected').on('value', snapshot => {
                 if(snapshot.val()) {
-                    firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/playing').onDisconnect().remove();
-                    firebase.database().ref('players/' + firebase.auth().currentUser.uid).update({ playing: true });
+                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).onDisconnect().remove();
+                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).set(true);
                 }
             });
             this.setPlayerAccountCreated();
