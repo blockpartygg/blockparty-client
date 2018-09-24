@@ -1,6 +1,7 @@
 import React from 'react';
 import { AsyncStorage, View, KeyboardAvoidingView, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import firebase from '../../Firebase';
 
 export default class SignUp extends React.Component {
     state = {
