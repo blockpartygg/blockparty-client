@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Button, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { GiftedChat } from 'react-native-gifted-chat';
 import firebase from '../../Firebase';
 
