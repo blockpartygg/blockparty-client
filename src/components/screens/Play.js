@@ -108,7 +108,8 @@ export default class Play extends React.Component {
     startPurchase() {
         if(this.state.bits >= 100) {
             firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currency').set(this.state.bits - 100);
-            firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').set(1);
+            let skinId = Math.floor(Math.random() * 5);
+            firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').set(skinId);
             this.postgameRewardsScene.startPurchase();
         }
     }
@@ -257,6 +258,7 @@ export default class Play extends React.Component {
                 break;
             case "postgameRewards":
                 this.scene = this.postgameRewardsScene;
+                this.scene.initialize();
                 break;
             default:
                 break;

@@ -7,7 +7,8 @@ class PostgameRewards extends React.Component {
     state = {
         name: '',
         currency: 0,
-        currencyGain: 100
+        currencyGain: 100,
+        isPurchaseDisabled: false,
     };
 
     currency = {
@@ -34,6 +35,7 @@ class PostgameRewards extends React.Component {
     }
 
     purchasePrize() {
+        this.setState({ isPurchaseDisabled: true });
         this.currency.tween = TweenLite.to(this.currency, 3, { value: this.props.bits - 100 });
         this.props.startPurchase();
     }
@@ -57,7 +59,7 @@ class PostgameRewards extends React.Component {
                     <Text style={styles.currencyGain}>+{this.state.currencyGain}</Text>
                 </View>
                 <Text style={styles.currencyTooltip}>Earn Block Bits by playing and winning games. Then spend them on cosmetic upgrades and new ways to play coming in the future!</Text>
-                <Button title="Buy a new look ($100)" onPress={this.purchasePrize} style={{ flex: 1 }} />
+                <Button title="Buy a new look ($100)" disabled={this.state.isPurchaseDisabled} onPress={this.purchasePrize} style={{ flex: 1 }} />
             </View>
         )
     }

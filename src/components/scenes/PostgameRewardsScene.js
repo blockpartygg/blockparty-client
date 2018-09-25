@@ -1,12 +1,12 @@
+import firebase from '../../Firebase';
 import { TweenLite } from 'gsap';
 import THREE from '../../THREE';
 import '../../TeapotBufferGeometry';
 
 class PostgameRewardsScene {
     avatar = {
-        tween: null,
-        scaleValue: 1,
-        scaleValue2: 0
+        currentScaleValue: 1,
+        nextScaleValue: 0
     }
 
     constructor(renderer) {
@@ -16,44 +16,47 @@ class PostgameRewardsScene {
         this.setupLights();
         this.setupBackground();
 
-        const blockGeometry = new THREE.BoxGeometry();
-        const sphereGeometry = new THREE.SphereGeometry(0.5);
-        let avatarGeometry = blockGeometry;
+        const geometries = [
+            new THREE.BoxGeometry(),
+            new THREE.SphereGeometry(0.5),
+            new THREE.ConeGeometry(0.5),
+            new THREE.CylinderGeometry(0.5),
+            new THREE.DodecahedronGeometry(0.5)
+        ];
+
+        let currentAvatarGeometry = geometries[0];
         let avatarMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
-        this.avatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
-        this.scene.add(this.avatarMesh);
+        this.currentAvatarMesh = new THREE.Mesh(currentAvatarGeometry, avatarMaterial);
+        this.scene.add(this.currentAvatarMesh);
 
-        let avatarGeometry2 = new THREE.TeapotBufferGeometry(0.5);
-        let avatarMaterial2 = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
-        this.avatarMesh2 = new THREE.Mesh(avatarGeometry2, avatarMaterial2);
-        this.avatarMesh2.scale.x = 0;
-        this.avatarMesh2.scale.y = 0;
-        this.avatarMesh2.scale.z = 0;
-        this.scene.add(this.avatarMesh2);
+        let nextAvatarGeometry = geometries[0];
+        this.nextAvatarMesh = new THREE.Mesh(nextAvatarGeometry, avatarMaterial);
+        this.scene.add(this.nextAvatarMesh);
 
-        // firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').on('value', snapshot => {
-        //     let currentSkin = snapshot.val();
-        //     if(currentSkin !== null) {
-        //         switch(currentSkin) {
-        //             case 0:
-        //                 avatarGeometry = blockGeometry;
-        //                 break;
-        //             case 1:
-        //                 avatarGeometry = sphereGeometry;
-        //                 break;
-        //             default: 
-        //                 avatarGeometry = blockGeometry;
-        //                 break;
-        //         }
-        //     }
-        //     else {
-        //         avatarGeometry = blockGeometry;
-        //     }
-        //     const avatarMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
-        //     this.scene.remove(this.avatarMesh);
-        //     this.avatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
-        //     this.scene.add(this.avatarMesh);
-        // });
+        this.initialize();
+
+        firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').once('value', snapshot => {
+            let currentSkin = snapshot.val();
+            if(currentSkin !== null) {
+                currentAvatarGeometry = geometries[currentSkin];
+                this.scene.remove(this.currentAvatarMesh);
+                this.currentAvatarMesh = new THREE.Mesh(currentAvatarGeometry, avatarMaterial);
+                this.scene.add(this.currentAvatarMesh);
+            }
+        });
+
+        firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').on('value', snapshot => {
+            let currentSkin = snapshot.val();
+            if(currentSkin !== null) {
+                nextAvatarGeometry = geometries[currentSkin];
+            }
+            else {
+                nextAvatarGeometry = geometries[0];
+            }
+            this.scene.remove(this.nextAvatarMesh);
+            this.nextAvatarMesh = new THREE.Mesh(nextAvatarGeometry, avatarMaterial);
+            this.scene.add(this.nextAvatarMesh);
+        });
     }
 
     setupScene() {
@@ -91,7 +94,7 @@ class PostgameRewardsScene {
         for(let i = 0; i < 100; i++) {
             let size = Math.random() * 3;
             let blockGeometry = new THREE.BoxGeometry(size, size, size);
-            let color = Math.random() * 0xeeeeee;
+            let color = Math.random() * 0xffffff;
             let blockMaterial = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
             this.blocks[i] = {};
             this.blocks[i].mesh = new THREE.Mesh(blockGeometry, blockMaterial);
@@ -104,16 +107,47 @@ class PostgameRewardsScene {
         }
     }
 
+    initialize() {
+        this.avatar.scaleValue = 1;
+        this.avatar.scaleValue2 = 0;
+        this.currentAvatarMesh.scale.x = 1;
+        this.currentAvatarMesh.scale.y = 1;
+        this.currentAvatarMesh.scale.z = 1;
+        this.nextAvatarMesh.scale.x = 0;
+        this.nextAvatarMesh.scale.y = 0;
+        this.nextAvatarMesh.scale.z = 0;
+    }
+
     onTouchesBegan(state) {
         
     }
 
     startPurchase() {
-        TweenLite.to(this.avatar, 2, { scaleValue: 0 });
-        TweenLite.to(this.avatar, 2, { scaleValue2: 1, delay: 3 });
+        this.avatar.currentScaleValue = 1;
+        this.avatar.nextScaleValue = 0;
+        this.currentAvatarMesh.scale.x = 1;
+        this.currentAvatarMesh.scale.y = 1;
+        this.currentAvatarMesh.scale.z = 1;
+        this.nextAvatarMesh.scale.x = 0;
+        this.nextAvatarMesh.scale.y = 0;
+        this.nextAvatarMesh.scale.z = 0;
+        TweenLite.to(this.avatar, 2, { currentScaleValue: 0 });
+        TweenLite.to(this.avatar, 2, { nextScaleValue: 1, delay: 3 });
     }
 
     update() {
+        this.updateBackground();
+
+        this.currentAvatarMesh.scale.x = this.avatar.currentScaleValue;
+        this.currentAvatarMesh.scale.y = this.avatar.currentScaleValue;
+        this.currentAvatarMesh.scale.z = this.avatar.currentScaleValue;
+
+        this.nextAvatarMesh.scale.x = this.avatar.nextScaleValue;
+        this.nextAvatarMesh.scale.y = this.avatar.nextScaleValue;
+        this.nextAvatarMesh.scale.z = this.avatar.nextScaleValue;
+    }
+
+    updateBackground() {
         for(let i = 0; i < 100; i++) {
             this.blocks[i].mesh.position.x += 0.01;
             if(this.blocks[i].mesh.position.x > 25) {
@@ -126,14 +160,6 @@ class PostgameRewardsScene {
             this.blocks[i].mesh.rotation.x += 0.01;
             this.blocks[i].mesh.rotation.y += 0.01;
         }
-
-        this.avatarMesh.scale.x = this.avatar.scaleValue;
-        this.avatarMesh.scale.y = this.avatar.scaleValue;
-        this.avatarMesh.scale.z = this.avatar.scaleValue;
-
-        this.avatarMesh2.scale.x = this.avatar.scaleValue2;
-        this.avatarMesh2.scale.y = this.avatar.scaleValue2;
-        this.avatarMesh2.scale.z = this.avatar.scaleValue2;
     }
 
     render() {
