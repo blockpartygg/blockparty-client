@@ -1,16 +1,15 @@
 import THREE from '../../THREE';
 import firebase from '../../Firebase';
+import { TweenLite } from 'gsap';
 
 class RedLightGreenLightScene {
     player = {
         positionZ: 0,
-        velocityZ: 0,
-        tapAccelerationZ: 5,
+        moving: false,
     }
     
     greenLight = true;
     otherPlayers = [];
-    otherPlayerCount = 10;
 
     constructor(renderer) {
         this.renderer = renderer;
@@ -19,45 +18,59 @@ class RedLightGreenLightScene {
         this.setupCamera();
         this.setupGround();
         
-        const blockGeometry = new THREE.BoxGeometry();
-        const sphereGeometry = new THREE.SphereGeometry(0.5);
+        const geometries = [
+            new THREE.BoxBufferGeometry(),
+            new THREE.SphereBufferGeometry(0.5),
+            new THREE.ConeBufferGeometry(0.5),
+            new THREE.CylinderBufferGeometry(0.5),
+            new THREE.DodecahedronBufferGeometry(0.5)
+        ];
         
-        let playerGeometry = blockGeometry;
+        let playerGeometry = geometries[0];
         const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
         this.playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
         this.scene.add(this.playerMesh);
 
-        let x = Math.floor(this.otherPlayerCount / 2) - this.otherPlayerCount;
-        for(let player = 0; player < this.otherPlayerCount; player++) {
-            const material = new THREE.MeshLambertMaterial({ color: Math.random() * 0xeeeeee, overdraw: 0.5 });
-            this.otherPlayers[player] = {};
-            this.otherPlayers[player].mesh = new THREE.Mesh(blockGeometry, material);
-            
-            if(x === 0) {
-                x++;
-            }
+        firebase.database().ref('players').orderByChild('playing').equalTo(true).on('value', snapshot => {
+            let x = Math.floor(snapshot.numChildren() / 2) - snapshot.numChildren();
+            snapshot.forEach(playerSnapshot => {
+                if(playerSnapshot.key === firebase.auth().currentUser.uid) {
+                    return;
+                }
 
-            this.otherPlayers[player].mesh.position.x = x++;
-            this.scene.add(this.otherPlayers[player].mesh);
-        }
+                let player = playerSnapshot.val();
+                if(player) {
+                    const material = new THREE.MeshLambertMaterial({ color: Math.random() * 0xeeeeee, overdraw: 0.5 });
+                    if(!this.otherPlayers[playerSnapshot.key]) {
+                        this.otherPlayers[playerSnapshot.key] = {};
+                    } else {
+                        this.scene.remove(this.otherPlayers[playerSnapshot.key].mesh);
+                    }
+                    this.otherPlayers[playerSnapshot.key].name = player.name;
+                    let otherPlayerGeometry;
+                    if(player.currentSkin) {
+                        otherPlayerGeometry = geometries[player.currentSkin];
+                    } else {
+                        otherPlayerGeometry = geometries[0];
+                    }
+                    this.otherPlayers[playerSnapshot.key].mesh = new THREE.Mesh(otherPlayerGeometry, material);
+
+                    if(x === 0) {
+                        x++;
+                    }
+                    this.otherPlayers[playerSnapshot.key].mesh.position.x = x++;
+                    this.scene.add(this.otherPlayers[playerSnapshot.key].mesh);
+                }
+            });
+        });
 
         firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').on('value', snapshot => {
             let currentSkin = snapshot.val();
             if(currentSkin !== null) {
-                switch(currentSkin) {
-                    case 0:
-                        playerGeometry = blockGeometry;
-                        break;
-                    case 1:
-                        playerGeometry = sphereGeometry;
-                        break;
-                    default: 
-                        playerGeometry = blockGeometry;
-                        break;
-                }
+                playerGeometry = geometries[currentSkin];
             }
             else {
-                playerGeometry = blockGeometry;
+                playerGeometry = geometries[0];
             }
             const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
             this.scene.remove(this.playerMesh);
@@ -66,15 +79,27 @@ class RedLightGreenLightScene {
         });
 
         firebase.database().ref('minigame/redLightGreenLight/players').on('value', snapshot => {
-            let index = 0;
             snapshot.forEach(player => {
                 if(player.key === firebase.auth().currentUser.uid) {
                     return;
                 }
-                if(this.otherPlayers[index] && player.val()) {
-                    this.otherPlayers[index].positionZ = player.val().positionZ;
-                    this.otherPlayers[index].velocityZ = player.val().velocityZ;
-                    index++;
+                if(player.val()) {
+                    if(!this.otherPlayers[player.key]) {
+                        this.otherPlayers[player.key] = {};
+                    }
+                    this.otherPlayers[player.key].initialPositionZ = this.otherPlayers[player.key].positionZ;
+                    this.otherPlayers[player.key].targetPositionZ = player.val().positionZ;
+                    if(!this.otherPlayers[player.key].moving && this.otherPlayers[player.key].initialPositionZ !== this.otherPlayers[player.key].targetPositionZ) {
+                        this.otherPlayers[player.key].moving = true;
+                        let deltaPositionZ = this.otherPlayers[player.key].targetPositionZ - this.otherPlayers[player.key].initialPositionZ;
+                        let moveDuration = 0.1;
+                        TweenLite.to(this.otherPlayers[player.key].mesh.position, moveDuration, { y: 1, z: this.otherPlayers[player.key].initialPositionZ + deltaPositionZ * 0.75 });
+                        TweenLite.to(this.otherPlayers[player.key].mesh.scale, moveDuration, { y: 1.2, z: 1 });
+                        TweenLite.to(this.otherPlayers[player.key].mesh.scale, moveDuration, { y: 0.8, z: 1, delay: moveDuration });
+                        TweenLite.to(this.otherPlayers[player.key].mesh.scale, moveDuration, { y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
+                        TweenLite.to(this.otherPlayers[player.key].mesh.position, moveDuration, { y: 0, z: this.otherPlayers[player.key].targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: () => { this.otherPlayers[player.key].positionZ = player.val().positionZ; this.otherPlayers[player.key].moving = false; } });
+                        this.otherPlayers[player.key].initialPositionZ = this.otherPlayers[player.key].targetPositionZ;
+                    }
                 }
             });
         });
@@ -95,7 +120,6 @@ class RedLightGreenLightScene {
         this.sceneRedColor = new THREE.Color(0xff0000);
         this.sceneRedFog = new THREE.Fog(this.sceneRedColor, 1, 100);
         this.scene.background = this.sceneGreenColor;
-        this.scene.fog = this.sceneGreenFog;
         
         let hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.9);
         this.scene.add(hemisphereLight);
@@ -106,25 +130,31 @@ class RedLightGreenLightScene {
     }
 
     setupCamera() {
-        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        this.cameraOffset = new THREE.Vector3(0, 1, -5);
+        this.camera = new THREE.OrthographicCamera(-562, 562, 1218, -1218, -30, 30);
+        this.cameraOffset = new THREE.Vector3(-1, 2.8, -2.9);
         this.camera.position.x = this.cameraOffset.x;
         this.camera.position.y = this.cameraOffset.y;
         this.camera.position.z = this.cameraOffset.z;
-        this.camera.lookAt(new THREE.Vector3());
-        this.camera.rotation.z = Math.PI;
+        this.camera.zoom = 110;
+        this.camera.updateProjectionMatrix();
+        this.camera.lookAt(this.scene.position);
     }
 
     setupGround() {
         const groundGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
         const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x333333, overdraw: 0.5 });
         this.groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
-        this.groundMesh.position.y = -0.5;
-        this.groundMesh.rotation.x = -Math.PI / 2;
+        this.groundMesh.position.y = -1;
         this.scene.add(this.groundMesh);
 
         const lineGeometry = new THREE.Geometry();
-        for(let z = 0; z <= 1000; z += 10) {
+        for(let x = -500; x <= 500; x += 1) {
+            lineGeometry.vertices.push(
+                new THREE.Vector3(x, 0, -500),
+                new THREE.Vector3(x, 0, 500)
+            );
+        }
+        for(let z = -500; z <= 500; z += 1) {
             lineGeometry.vertices.push(
                 new THREE.Vector3(-500, 0, z),
                 new THREE.Vector3(500, 0, z)
@@ -132,13 +162,13 @@ class RedLightGreenLightScene {
         }
         const lineMaterial = new THREE.MeshBasicMaterial({ color: "white" });
         this.lineMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
-        this.lineMesh.position.y = -0.5;
+        this.lineMesh.position.y = -1;
         this.scene.add(this.lineMesh);
     }
 
     initialize() {
         this.player.positionZ = 0;
-        this.player.velocityZ = 0;
+        this.player.moving = false;
         this.playerMesh.position.z = this.player.positionZ;
         
         this.camera.position.x = this.cameraOffset.x;
@@ -147,7 +177,6 @@ class RedLightGreenLightScene {
 
         this.otherPlayers.forEach(player => {
             player.positionZ = 0;
-            player.velocityZ = 0;
             player.mesh.position.z = player.positionZ;
         });
 
@@ -165,40 +194,50 @@ class RedLightGreenLightScene {
     }
 
     onTouchesBegan(state) {
-        this.tap();
+        TweenLite.to(this.playerMesh.scale, 0.2, { x: 1.2, y: 0.75, z: 1 });
     }
 
-    tap() {
-        if(this.greenLight) {
-            this.player.velocityZ = this.player.tapAccelerationZ;
+    onTouchesEnded() {
+        if(!this.player.moving) {
+            this.player.moving = true;
+            this.initialPositionZ = this.player.positionZ;
+            if(this.greenLight) {
+                this.targetPositionZ = this.player.positionZ + 1;
+            }
+            else {
+                this.targetPositionZ = this.player.positionZ - 2;
+            }
+            
+            let deltaPositionZ = this.targetPositionZ - this.initialPositionZ;
+            let moveDuration = 0.1;
+            TweenLite.to(this.playerMesh.position, moveDuration, { x: 0, y: 1, z: this.initialPositionZ + deltaPositionZ * 0.75 });
+            TweenLite.to(this.playerMesh.scale, moveDuration, { x: 1, y: 1.2, z: 1 });
+            TweenLite.to(this.playerMesh.scale, moveDuration, { x: 1, y: 0.8, z: 1, delay: moveDuration });
+            TweenLite.to(this.playerMesh.scale, moveDuration, { x: 1, y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
+            TweenLite.to(this.playerMesh.position, moveDuration, { x: 0, y: 0, z: this.targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: this.doneMoving });
+            this.initialPositionZ = this.targetPositionZ;
         }
-        else {
-            this.player.velocityZ = -2 * this.player.tapAccelerationZ;
-        }
+    }
+
+    doneMoving = () => {
+        this.player.moving = false;
+        this.player.positionZ = this.targetPositionZ;
     }
 
     update(delta) {
-        this.player.velocityZ *= 0.95;
-        this.player.positionZ += this.player.velocityZ * delta;
-        if(this.player.positionZ <= 0) {
-            this.player.positionZ = 0;
-        }
-        this.playerMesh.position.z = this.player.positionZ;
         this.camera.position.x = this.cameraOffset.x;
         this.camera.position.y = this.cameraOffset.y;
-        this.camera.position.z = this.player.positionZ + this.cameraOffset.z;
+        this.camera.position.z = this.playerMesh.position.z + this.cameraOffset.z;
 
-        this.otherPlayers.forEach(player => {
-            player.mesh.position.z = player.positionZ;
-        });
+        // for(key in Object.keys(this.otherPlayers)) {
+        //     this.otherPlayers[key].mesh.position.z = this.otherPlayers[key].positionZ;
+        // }
 
         if(this.greenLight) {
             this.scene.background = this.sceneGreenColor;
-            this.scene.fog = this.sceneGreenFog;
         }
         else {
             this.scene.background = this.sceneRedColor;
-            this.scene.fog = this.sceneRedFog;
         }
     }
 
