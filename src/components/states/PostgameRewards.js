@@ -5,6 +5,7 @@ import { withRouter } from '../../Routing';
 
 class PostgameRewards extends React.Component {
     state = {
+        name: '',
         currency: 0,
         currencyGain: 100
     };
@@ -26,13 +27,14 @@ class PostgameRewards extends React.Component {
     }
 
     componentWillMount() {
-        this.currency.tween = TweenLite.to(this.currency, 3, { value: 100, delay: 2 });
+        this.currency.value = this.props.bits;
+        this.currency.tween = TweenLite.to(this.currency, 3, { value: this.props.bits + this.state.currencyGain, delay: 2 });
         this.currencyGain.tween = TweenLite.to(this.currencyGain, 3, { value: 0, delay: 2 });
         this.raf = requestAnimationFrame(this.update);
     }
 
     purchasePrize() {
-        this.currency.tween = TweenLite.to(this.currency, 3, { value: 0 });
+        this.currency.tween = TweenLite.to(this.currency, 3, { value: this.props.bits - 100 });
         this.props.startPurchase();
     }
 
@@ -45,16 +47,8 @@ class PostgameRewards extends React.Component {
     render() {
         return(
             <View style={styles.container} pointerEvents="box-none">
-                <Text style={styles.title}>Ron Solo</Text>
+                <Text style={styles.title}>{this.props.name}</Text>
                 <View style={styles.avatar} />
-                {/*<View style={styles.experience}>
-                    <Text style={styles.experienceLabel}>XP</Text>
-                    <View style={styles.experienceBarOuter}>
-                        <View style={styles.experienceBarInner} />
-                        <Text style={styles.experienceText}>0</Text>
-                    </View>
-                    <Text style={styles.experienceGain}>+1,000</Text>
-                </View>*/}
                 <View style={styles.currency}>
                     <Text style={styles.currencyLabel}>$</Text>
                     <View style={styles.currencyBar}>
