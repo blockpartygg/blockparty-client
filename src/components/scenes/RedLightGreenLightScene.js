@@ -19,10 +19,11 @@ class RedLightGreenLightScene {
         this.setupCamera();
         this.setupGround();
         
+        console.log('setting up player');
         const blockGeometry = new THREE.BoxGeometry();
         const sphereGeometry = new THREE.SphereGeometry(0.5);
-        
         let playerGeometry = blockGeometry;
+
         const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
         this.playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
         this.scene.add(this.playerMesh);

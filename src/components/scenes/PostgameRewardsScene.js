@@ -11,65 +11,14 @@ class PostgameRewardsScene {
 
     constructor(renderer) {
         this.renderer = renderer;
-        this.setupScene();
-        this.setupCamera();
-        this.setupLights();
-        this.setupBackground();
-
-        const blockGeometry = new THREE.BoxGeometry();
-        const sphereGeometry = new THREE.SphereGeometry(0.5);
-        let avatarGeometry = blockGeometry;
-        let avatarMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
-        this.avatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
-        this.scene.add(this.avatarMesh);
-
-        let avatarGeometry2 = new THREE.TeapotBufferGeometry(0.5);
-        let avatarMaterial2 = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
-        this.avatarMesh2 = new THREE.Mesh(avatarGeometry2, avatarMaterial2);
-        this.avatarMesh2.scale.x = 0;
-        this.avatarMesh2.scale.y = 0;
-        this.avatarMesh2.scale.z = 0;
-        this.scene.add(this.avatarMesh2);
-
-        // firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').on('value', snapshot => {
-        //     let currentSkin = snapshot.val();
-        //     if(currentSkin !== null) {
-        //         switch(currentSkin) {
-        //             case 0:
-        //                 avatarGeometry = blockGeometry;
-        //                 break;
-        //             case 1:
-        //                 avatarGeometry = sphereGeometry;
-        //                 break;
-        //             default: 
-        //                 avatarGeometry = blockGeometry;
-        //                 break;
-        //         }
-        //     }
-        //     else {
-        //         avatarGeometry = blockGeometry;
-        //     }
-        //     const avatarMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
-        //     this.scene.remove(this.avatarMesh);
-        //     this.avatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
-        //     this.scene.add(this.avatarMesh);
-        // });
-    }
-
-    setupScene() {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x570C76);
-    }
-
-    setupCamera() {
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.x = 1;
         this.camera.position.y = 1;
         this.camera.position.z = 3;
         this.camera.lookAt(new THREE.Vector3());
-    }
 
-    setupLights() {
         const ambientLight = new THREE.AmbientLight( 0x404040 );
         this.scene.add(ambientLight);
 
@@ -84,9 +33,20 @@ class PostgameRewardsScene {
         directionalLight2.position.y = 0.5;
         directionalLight2.position.z = 0.5;
         this.scene.add(directionalLight2);
-    }
 
-    setupBackground() {
+        let avatarGeometry = new THREE.BoxGeometry();
+        let avatarMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
+        this.avatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
+        this.scene.add(this.avatarMesh);
+
+        let avatarGeometry2 = new THREE.TeapotBufferGeometry(0.5);
+        let avatarMaterial2 = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
+        this.avatarMesh2 = new THREE.Mesh(avatarGeometry2, avatarMaterial2);
+        this.avatarMesh2.scale.x = 0;
+        this.avatarMesh2.scale.y = 0;
+        this.avatarMesh2.scale.z = 0;
+        this.scene.add(this.avatarMesh2);
+
         this.blocks = [];
         for(let i = 0; i < 100; i++) {
             let size = Math.random() * 3;

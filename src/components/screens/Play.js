@@ -27,8 +27,6 @@ import PostgameRewardsScene from '../scenes/PostgameRewardsScene';
 
 export default class Play extends React.Component {
     state = {
-        name: null,
-        bits: null,
         state: null,
         endTime: null,
         round: null,
@@ -58,9 +56,6 @@ export default class Play extends React.Component {
                     else {
                         if(!player.name) {
                             this.props.history.replace('/');
-                        }
-                        else {
-                            this.setState({ name: player.name });
                         }
                     }
                 });
@@ -97,20 +92,10 @@ export default class Play extends React.Component {
                 this.setState({ mode: mode });
             }
         });
-        firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currency').on('value', snapshot => {
-            let bits = snapshot.val();
-            if(bits) {
-                this.setState({ bits: bits });
-            }
-        });
     }
 
     startPurchase() {
-        if(this.state.bits >= 100) {
-            firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currency').set(this.state.bits - 100);
-            firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').set(1);
-            this.postgameRewardsScene.startPurchase();
-        }
+        this.postgameRewardsScene.startPurchase();
     }
 
     onPressBack = () => { 
@@ -175,7 +160,7 @@ export default class Play extends React.Component {
                 overlay = <PostgameCelebration />
                 break;
             case "postgameRewards":
-                overlay = <PostgameRewardsWithRouter name={this.state.name} bits={this.state.bits} startPurchase={this.startPurchase} />
+                overlay = <PostgameRewardsWithRouter startPurchase={this.startPurchase} />
                 break;
             default:
                 console.log(`invalid game state: ${this.state.state}`);
