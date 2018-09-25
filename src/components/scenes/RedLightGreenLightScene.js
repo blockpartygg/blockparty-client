@@ -1,6 +1,7 @@
 import THREE from '../../THREE';
 import firebase from '../../Firebase';
 import { TweenLite } from 'gsap';
+import robotoFont from '../../assets/fonts/Roboto_Regular.json';
 
 class RedLightGreenLightScene {
     player = {
@@ -26,10 +27,24 @@ class RedLightGreenLightScene {
             new THREE.DodecahedronBufferGeometry(0.5)
         ];
         
+        this.playerGroup = new THREE.Group();
+
         let playerGeometry = geometries[0];
         const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
         this.playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
-        this.scene.add(this.playerMesh);
+        this.playerGroup.add(this.playerMesh);
+
+        const fontLoader = new THREE.FontLoader();
+        this.font = fontLoader.parse(require('../../assets/fonts/helvetiker_regular.typeface.json'));
+        const textGeometry = new THREE.TextGeometry("RonSolo", { font: this.font, size: 0.5, height: 0 });
+        const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+        this.textMesh = new THREE.Mesh(textGeometry, textMaterial);
+        this.textMesh.position.x = 1.2;
+        this.textMesh.position.y = 1.5;
+        this.textMesh.rotation.y = Math.PI;
+        this.playerGroup.add(this.textMesh);
+
+        this.scene.add(this.playerGroup);
 
         firebase.database().ref('players').orderByChild('playing').equalTo(true).on('value', snapshot => {
             let x = Math.floor(snapshot.numChildren() / 2) - snapshot.numChildren();
@@ -53,13 +68,24 @@ class RedLightGreenLightScene {
                     } else {
                         otherPlayerGeometry = geometries[0];
                     }
+                    this.otherPlayers[playerSnapshot.key].group = new THREE.Group();
                     this.otherPlayers[playerSnapshot.key].mesh = new THREE.Mesh(otherPlayerGeometry, material);
 
                     if(x === 0) {
                         x++;
                     }
-                    this.otherPlayers[playerSnapshot.key].mesh.position.x = x++;
-                    this.scene.add(this.otherPlayers[playerSnapshot.key].mesh);
+                    this.otherPlayers[playerSnapshot.key].group.position.x = x++;
+                    this.otherPlayers[playerSnapshot.key].group.add(this.otherPlayers[playerSnapshot.key].mesh);
+
+                    const textGeometry = new THREE.TextGeometry(this.otherPlayers[playerSnapshot.key].name, { font: this.font, size: 0.5, height: 0 });
+                    const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+                    this.otherPlayers[playerSnapshot.key].text = new THREE.Mesh(textGeometry, textMaterial);
+                    this.otherPlayers[playerSnapshot.key].text.position.x = 1.2;
+                    this.otherPlayers[playerSnapshot.key].text.position.y = 1.5;
+                    this.otherPlayers[playerSnapshot.key].text.rotation.y = Math.PI;
+                    this.otherPlayers[playerSnapshot.key].group.add(this.otherPlayers[playerSnapshot.key].text);
+
+                    this.scene.add(this.otherPlayers[playerSnapshot.key].group);
                 }
             });
         });
@@ -73,9 +99,9 @@ class RedLightGreenLightScene {
                 playerGeometry = geometries[0];
             }
             const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
-            this.scene.remove(this.playerMesh);
+            this.playerGroup.remove(this.playerMesh);
             this.playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
-            this.scene.add(this.playerMesh);
+            this.playerGroup.add(this.playerMesh);
         });
 
         firebase.database().ref('minigame/redLightGreenLight/players').on('value', snapshot => {
@@ -93,11 +119,11 @@ class RedLightGreenLightScene {
                         this.otherPlayers[player.key].moving = true;
                         let deltaPositionZ = this.otherPlayers[player.key].targetPositionZ - this.otherPlayers[player.key].initialPositionZ;
                         let moveDuration = 0.1;
-                        TweenLite.to(this.otherPlayers[player.key].mesh.position, moveDuration, { y: 1, z: this.otherPlayers[player.key].initialPositionZ + deltaPositionZ * 0.75 });
-                        TweenLite.to(this.otherPlayers[player.key].mesh.scale, moveDuration, { y: 1.2, z: 1 });
-                        TweenLite.to(this.otherPlayers[player.key].mesh.scale, moveDuration, { y: 0.8, z: 1, delay: moveDuration });
-                        TweenLite.to(this.otherPlayers[player.key].mesh.scale, moveDuration, { y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
-                        TweenLite.to(this.otherPlayers[player.key].mesh.position, moveDuration, { y: 0, z: this.otherPlayers[player.key].targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: () => { this.otherPlayers[player.key].positionZ = player.val().positionZ; this.otherPlayers[player.key].moving = false; } });
+                        TweenLite.to(this.otherPlayers[player.key].group.position, moveDuration, { y: 1, z: this.otherPlayers[player.key].initialPositionZ + deltaPositionZ * 0.75 });
+                        TweenLite.to(this.otherPlayers[player.key].group.scale, moveDuration, { y: 1.2, z: 1 });
+                        TweenLite.to(this.otherPlayers[player.key].group.scale, moveDuration, { y: 0.8, z: 1, delay: moveDuration });
+                        TweenLite.to(this.otherPlayers[player.key].group.scale, moveDuration, { y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
+                        TweenLite.to(this.otherPlayers[player.key].group.position, moveDuration, { y: 0, z: this.otherPlayers[player.key].targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: () => { this.otherPlayers[player.key].positionZ = player.val().positionZ; this.otherPlayers[player.key].moving = false; } });
                         this.otherPlayers[player.key].initialPositionZ = this.otherPlayers[player.key].targetPositionZ;
                     }
                 }
@@ -169,7 +195,7 @@ class RedLightGreenLightScene {
     initialize() {
         this.player.positionZ = 0;
         this.player.moving = false;
-        this.playerMesh.position.z = this.player.positionZ;
+        this.playerGroup.position.z = this.player.positionZ;
         
         this.camera.position.x = this.cameraOffset.x;
         this.camera.position.y = this.cameraOffset.y;
@@ -194,7 +220,7 @@ class RedLightGreenLightScene {
     }
 
     onTouchesBegan(state) {
-        TweenLite.to(this.playerMesh.scale, 0.2, { x: 1.2, y: 0.75, z: 1 });
+        TweenLite.to(this.playerGroup.scale, 0.2, { x: 1.2, y: 0.75, z: 1 });
     }
 
     onTouchesEnded() {
@@ -210,11 +236,11 @@ class RedLightGreenLightScene {
             
             let deltaPositionZ = this.targetPositionZ - this.initialPositionZ;
             let moveDuration = 0.1;
-            TweenLite.to(this.playerMesh.position, moveDuration, { x: 0, y: 1, z: this.initialPositionZ + deltaPositionZ * 0.75 });
-            TweenLite.to(this.playerMesh.scale, moveDuration, { x: 1, y: 1.2, z: 1 });
-            TweenLite.to(this.playerMesh.scale, moveDuration, { x: 1, y: 0.8, z: 1, delay: moveDuration });
-            TweenLite.to(this.playerMesh.scale, moveDuration, { x: 1, y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
-            TweenLite.to(this.playerMesh.position, moveDuration, { x: 0, y: 0, z: this.targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: this.doneMoving });
+            TweenLite.to(this.playerGroup.position, moveDuration, { x: 0, y: 1, z: this.initialPositionZ + deltaPositionZ * 0.75 });
+            TweenLite.to(this.playerGroup.scale, moveDuration, { x: 1, y: 1.2, z: 1 });
+            TweenLite.to(this.playerGroup.scale, moveDuration, { x: 1, y: 0.8, z: 1, delay: moveDuration });
+            TweenLite.to(this.playerGroup.scale, moveDuration, { x: 1, y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
+            TweenLite.to(this.playerGroup.position, moveDuration, { x: 0, y: 0, z: this.targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: this.doneMoving });
             this.initialPositionZ = this.targetPositionZ;
         }
     }
@@ -227,7 +253,7 @@ class RedLightGreenLightScene {
     update(delta) {
         this.camera.position.x = this.cameraOffset.x;
         this.camera.position.y = this.cameraOffset.y;
-        this.camera.position.z = this.playerMesh.position.z + this.cameraOffset.z;
+        this.camera.position.z = this.playerGroup.position.z + this.cameraOffset.z;
 
         // for(key in Object.keys(this.otherPlayers)) {
         //     this.otherPlayers[key].mesh.position.z = this.otherPlayers[key].positionZ;
