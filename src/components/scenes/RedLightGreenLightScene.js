@@ -16,35 +16,14 @@ class RedLightGreenLightScene {
         this.renderer = renderer;
 
         this.setupScene();
-
-        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        this.cameraOffset = new THREE.Vector3(0, 1, -5);
-        this.camera.position.x = this.cameraOffset.x;
-        this.camera.position.y = this.cameraOffset.y;
-        this.camera.position.z = this.cameraOffset.z;
-        this.camera.lookAt(new THREE.Vector3());
-        this.camera.rotation.z = Math.PI;
-
-        const groundGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
-        const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x333333, overdraw: 0.5 });
-        this.groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
-        this.groundMesh.position.y = -0.5;
-        this.groundMesh.rotation.x = -Math.PI / 2;
-        this.scene.add(this.groundMesh);
-
-        const lineGeometry = new THREE.Geometry();
-        for(let z = 0; z <= 1000; z += 10) {
-            lineGeometry.vertices.push(
-                new THREE.Vector3(-500, 0, z),
-                new THREE.Vector3(500, 0, z)
-            );
-        }
-        const lineMaterial = new THREE.MeshBasicMaterial({ color: "white" });
-        this.lineMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
-        this.lineMesh.position.y = -0.5;
-        this.scene.add(this.lineMesh);
+        this.setupCamera();
+        this.setupGround();
         
-        const playerGeometry = new THREE.BoxGeometry();
+        console.log('setting up player');
+        const blockGeometry = new THREE.BoxGeometry();
+        const sphereGeometry = new THREE.SphereGeometry(0.5);
+        let playerGeometry = blockGeometry;
+
         const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
         this.playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
         this.scene.add(this.playerMesh);
@@ -53,7 +32,7 @@ class RedLightGreenLightScene {
         for(let player = 0; player < this.otherPlayerCount; player++) {
             const material = new THREE.MeshLambertMaterial({ color: Math.random() * 0xeeeeee, overdraw: 0.5 });
             this.otherPlayers[player] = {};
-            this.otherPlayers[player].mesh = new THREE.Mesh(playerGeometry, material);
+            this.otherPlayers[player].mesh = new THREE.Mesh(blockGeometry, material);
             
             if(x === 0) {
                 x++;
@@ -62,6 +41,30 @@ class RedLightGreenLightScene {
             this.otherPlayers[player].mesh.position.x = x++;
             this.scene.add(this.otherPlayers[player].mesh);
         }
+
+        firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').on('value', snapshot => {
+            let currentSkin = snapshot.val();
+            if(currentSkin !== null) {
+                switch(currentSkin) {
+                    case 0:
+                        playerGeometry = blockGeometry;
+                        break;
+                    case 1:
+                        playerGeometry = sphereGeometry;
+                        break;
+                    default: 
+                        playerGeometry = blockGeometry;
+                        break;
+                }
+            }
+            else {
+                playerGeometry = blockGeometry;
+            }
+            const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
+            this.scene.remove(this.playerMesh);
+            this.playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
+            this.scene.add(this.playerMesh);
+        });
 
         firebase.database().ref('minigame/redLightGreenLight/players').on('value', snapshot => {
             let index = 0;
@@ -101,6 +104,37 @@ class RedLightGreenLightScene {
         let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         directionalLight.position.set(0, 0, -1).normalize();
         this.scene.add(directionalLight);
+    }
+
+    setupCamera() {
+        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        this.cameraOffset = new THREE.Vector3(0, 1, -5);
+        this.camera.position.x = this.cameraOffset.x;
+        this.camera.position.y = this.cameraOffset.y;
+        this.camera.position.z = this.cameraOffset.z;
+        this.camera.lookAt(new THREE.Vector3());
+        this.camera.rotation.z = Math.PI;
+    }
+
+    setupGround() {
+        const groundGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
+        const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x333333, overdraw: 0.5 });
+        this.groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
+        this.groundMesh.position.y = -0.5;
+        this.groundMesh.rotation.x = -Math.PI / 2;
+        this.scene.add(this.groundMesh);
+
+        const lineGeometry = new THREE.Geometry();
+        for(let z = 0; z <= 1000; z += 10) {
+            lineGeometry.vertices.push(
+                new THREE.Vector3(-500, 0, z),
+                new THREE.Vector3(500, 0, z)
+            );
+        }
+        const lineMaterial = new THREE.MeshBasicMaterial({ color: "white" });
+        this.lineMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
+        this.lineMesh.position.y = -0.5;
+        this.scene.add(this.lineMesh);
     }
 
     initialize() {
