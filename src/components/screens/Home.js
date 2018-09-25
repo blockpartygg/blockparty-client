@@ -283,7 +283,6 @@ const styles = StyleSheet.create({
     },
     playButton: {
         margin: 10,
-        padding: 10,
         justifyContent: "center",
         backgroundColor: "#EE3AAF",
         borderWidth: 5,
@@ -297,6 +296,9 @@ const styles = StyleSheet.create({
         color: "white"
     },
     chat: {
+        marginLeft: 10,
+        marginRight: 10,
+        marginBottom: 20,
         flex: 1,
     }
 });
