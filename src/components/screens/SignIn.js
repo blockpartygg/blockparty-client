@@ -1,5 +1,5 @@
 import React from 'react';
-import { AsyncStorage, View, Text, KeyboardAvoidingView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { View, Text, KeyboardAvoidingView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import firebase from '../../Firebase';
 
@@ -13,43 +13,20 @@ export default class SignIn extends React.Component {
     }
 
     handleSignIn = (event) => {
-        firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password).then(() => {
-            firebase.database().ref('.info/connected').on('value', snapshot => {
-                if(snapshot.val()) {
-                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).onDisconnect().remove();
-                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).set(true);
-                }
-            });
-            this.setPlayerAccountCreated();
+        firebase.signIn(this.state.email, this.state.password, () => {
             this.props.history.push('/home');
-        }).catch(error => {
+        }, error => {
             this.setState({ signInError: error });
         });
         event.preventDefault();
     }
 
-    setPlayerAccountCreated = async () => {
-        try {
-            await AsyncStorage.setItem('playerAccountCreated', 'true');
-        } catch(error) {
-            console.log(error);
-        }
-    }
-
     handlePlayAsGuest = (event) => {
-        if(this.state.name !== '') {
-            firebase.auth().signInAnonymously().then(() => {
-                firebase.database().ref('.info/connected').on('value', snapshot => {
-                    if(snapshot.val()) {
-                        firebase.database().ref('players/' + firebase.auth().currentUser.uid).onDisconnect().remove();
-                        firebase.database().ref('players/' + firebase.auth().currentUser.uid).set({ name: this.state.name, playing: true });
-                    }
-                });
-                this.props.history.push('/home');
-            }).catch(error => {
-                this.setState({ playAsGuestError: error });
-            });
-        }
+        firebase.signInAsGuest(this.state.name, () => {
+            this.props.history.push('/home');
+        }, error => {
+            this.setState({ playAsGuestError: error });
+        });
     }
 
     onPressSignUp = () => {
@@ -65,6 +42,7 @@ export default class SignIn extends React.Component {
             this.state.email === '' ||
             this.state.password === ''
         );
+        const isPlayAsGuestDisabled = this.state.name === '';
 
         return(
             <View style={styles.container}>
@@ -83,7 +61,9 @@ export default class SignIn extends React.Component {
                         <Text style={styles.instructionsText}>Or...</Text>
                         <TextInput value={this.state.name} onChangeText={text => { this.setState({ name: text }); }} placeholder="Player name" style={styles.formTextInput} />
                         <Text style={styles.instructionsText}>{this.state.playerAsGuestError && this.state.playAsGuestError.message}</Text>
-                        <Text onPress={this.handlePlayAsGuest} style={styles.playAsGuestLinkText}>Play as Guest</Text>
+                        <TouchableOpacity onPress={this.handlePlayAsGuest} disabled={isPlayAsGuestDisabled} style={styles.playAsGuestButton}>
+                            <Text style={styles.playAsGuestLinkText}>Play as Guest</Text>    
+                        </TouchableOpacity>
                         <TouchableOpacity onPress={this.handleSignIn} disabled={isSignInDisabled} style={styles.signInButton}>
                             <Text style={styles.signInButtonText}>Sign in</Text>
                         </TouchableOpacity>

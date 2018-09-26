@@ -1,7 +1,9 @@
 import React from "react";
 import { StatusBar } from "react-native";
 import { AppLoading, Asset } from 'expo';
+import firebase from './Firebase';
 import { Router, Switch, Route } from './Routing';
+import THREE from './THREE';
 import Title from './components/screens/Title';
 import Home from './components/screens/Home';
 import Play from './components/screens/Play';
@@ -12,6 +14,20 @@ import Web from './components/screens/Web';
 export default class App extends React.Component {
     state = {
         loading: true,
+    }
+
+    componentWillMount() {
+        firebase.initialize();
+        THREE.suppressExpoWarnings();
+    }
+
+    componentDidMount() {
+        StatusBar.setBarStyle("light-content");
+        console.disableYellowBox = true;
+    }
+
+    componentWillUnmount() {
+        THREE.suppressExpoWarnings(false);
     }
 
     loadAssetsAsync = async () => {
@@ -27,11 +43,6 @@ export default class App extends React.Component {
                 return Asset.fromModule(image).downloadAsync();
             }
         });
-    }
-
-    componentDidMount() {
-        StatusBar.setBarStyle("light-content");
-        console.disableYellowBox = true;
     }
 
     render() {

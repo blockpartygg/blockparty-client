@@ -6,7 +6,7 @@ import '../../TeapotBufferGeometry';
 class PostgameRewardsScene {
     avatar = {
         currentScaleValue: 1,
-        nextScaleValue: 0
+        nextScaleValue: 0.1
     }
 
     constructor(renderer) {
@@ -35,7 +35,7 @@ class PostgameRewardsScene {
 
         this.initialize();
 
-        firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').once('value', snapshot => {
+        firebase.database.ref('players/' + firebase.uid + '/currentSkin').once('value', snapshot => {
             let currentSkin = snapshot.val();
             if(currentSkin !== null) {
                 currentAvatarGeometry = geometries[currentSkin];
@@ -45,7 +45,7 @@ class PostgameRewardsScene {
             }
         });
 
-        firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').on('value', snapshot => {
+        firebase.database.ref('players/' + firebase.uid + '/currentSkin').on('value', snapshot => {
             let currentSkin = snapshot.val();
             if(currentSkin !== null) {
                 nextAvatarGeometry = geometries[currentSkin];
@@ -113,9 +113,9 @@ class PostgameRewardsScene {
         this.currentAvatarMesh.scale.x = 1;
         this.currentAvatarMesh.scale.y = 1;
         this.currentAvatarMesh.scale.z = 1;
-        this.nextAvatarMesh.scale.x = 0;
-        this.nextAvatarMesh.scale.y = 0;
-        this.nextAvatarMesh.scale.z = 0;
+        this.nextAvatarMesh.scale.x = 0.1;
+        this.nextAvatarMesh.scale.y = 0.1;
+        this.nextAvatarMesh.scale.z = 0.1;
     }
 
     onTouchesBegan(state) {
@@ -128,10 +128,10 @@ class PostgameRewardsScene {
         this.currentAvatarMesh.scale.x = 1;
         this.currentAvatarMesh.scale.y = 1;
         this.currentAvatarMesh.scale.z = 1;
-        this.nextAvatarMesh.scale.x = 0;
-        this.nextAvatarMesh.scale.y = 0;
-        this.nextAvatarMesh.scale.z = 0;
-        TweenLite.to(this.avatar, 2, { currentScaleValue: 0 });
+        this.nextAvatarMesh.scale.x = 0.1;
+        this.nextAvatarMesh.scale.y = 0.1;
+        this.nextAvatarMesh.scale.z = 0.1;
+        TweenLite.to(this.avatar, 2, { currentScaleValue: 0.1 });
         TweenLite.to(this.avatar, 2, { nextScaleValue: 1, delay: 3 });
     }
 

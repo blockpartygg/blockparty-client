@@ -1,6 +1,8 @@
 import React from 'react';
 import { View , Text, Button, StyleSheet } from 'react-native';
+import { AdMobRewarded } from 'expo';
 import { TweenLite } from 'gsap';
+import firebase from '../../Firebase';
 import { withRouter } from '../../Routing';
 
 class PostgameRewards extends React.Component {
@@ -9,6 +11,7 @@ class PostgameRewards extends React.Component {
         currency: 0,
         currencyGain: 100,
         isPurchaseDisabled: false,
+        didWatchAd: false,
     };
 
     currency = {
@@ -23,27 +26,69 @@ class PostgameRewards extends React.Component {
 
     constructor(props) {
         super(props);
-        this.purchasePrize = this.purchasePrize.bind(this);
+        this.onPressPurchasePrize = this.onPressPurchasePrize.bind(this);
+        this.onPressWatchAd = this.onPressWatchAd.bind(this);
         this.update = this.update.bind(this);
     }
 
     componentWillMount() {
-        this.currency.value = this.props.bits;
-        this.currency.tween = TweenLite.to(this.currency, 3, { value: this.props.bits + this.state.currencyGain, delay: 2 });
-        this.currencyGain.tween = TweenLite.to(this.currencyGain, 3, { value: 0, delay: 2 });
-        this.raf = requestAnimationFrame(this.update);
+        let adUnitId;
+        // adUnitId = 'ca-app-pub-6023984980488094/1926752312'; // Production
+        adUnitId = 'ca-app-pub-3940256099942544/1712485313'; // Development
+        AdMobRewarded.setAdUnitID(adUnitId);
+        AdMobRewarded.setTestDeviceID('EMULATOR');
+        AdMobRewarded.addEventListener('rewardedVideoDidRewardUser', this.onRewardedVideoDidRewardUser);
+        AdMobRewarded.addEventListener('rewardedVideoDidClose', this.onRewardedVideoDidClose);
+        this.requestAdAsync();
     }
 
-    purchasePrize() {
-        this.setState({ isPurchaseDisabled: true });
-        this.currency.tween = TweenLite.to(this.currency, 3, { value: this.props.bits - 100 });
-        this.props.startPurchase();
+    onRewardedVideoDidRewardUser = reward => {
+        this.setState({ didWatchAd: true });
+        firebase.database.ref('players/' + firebase.uid).transaction(player => {
+            if(player) {
+                player.currency += 100;
+            }
+            return player;
+        });
     }
+
+    onRewardedVideoDidClose = () => {
+        this.currency.value = 0;
+        this.currencyGain.value = 100;
+        TweenLite.to(this.currency, 3, { value: /* current value + */ this.state.currencyGain, delay: 2 });
+        TweenLite.to(this.currencyGain, 3, { value: 0, delay: 2 });
+    }
+
+    requestAdAsync = async () => {
+        await AdMobRewarded.requestAdAsync();
+    }
+
+    componentDidMount() {
+        this.currency.value = this.props.bits;
+        TweenLite.to(this.currency, 3, { value: /* this.props.bits + */this.state.currencyGain, delay: 2 });
+        TweenLite.to(this.currencyGain, 3, { value: 0, delay: 2 });
+        
+        this.raf = requestAnimationFrame(this.update);
+    }    
 
     update() {
         this.raf = requestAnimationFrame(this.update);
         this.setState({ currency: Math.round(this.currency.value) });
         this.setState({ currencyGain: Math.round(this.currencyGain.value) });
+    }
+
+    onPressPurchasePrize() {
+        this.setState({ isPurchaseDisabled: true });
+        this.currency.tween = TweenLite.to(this.currency, 3, { value: this.props.bits - 100 });
+        this.props.startPurchase();
+    }
+
+    onPressWatchAd() {
+        this.showAdAsync();
+    }
+
+    showAdAsync = async () => {
+        await AdMobRewarded.showAdAsync();
     }
 
     render() {
@@ -52,14 +97,15 @@ class PostgameRewards extends React.Component {
                 <Text style={styles.title}>{this.props.name}</Text>
                 <View style={styles.avatar} />
                 <View style={styles.currency}>
-                    <Text style={styles.currencyLabel}>$</Text>
+                    <Text style={styles.currencyLabel}>BB</Text>
                     <View style={styles.currencyBar}>
                         <Text style={styles.currencyText}>{this.state.currency}</Text>
                     </View>
                     <Text style={styles.currencyGain}>+{this.state.currencyGain}</Text>
                 </View>
-                <Text style={styles.currencyTooltip}>Earn Block Bits by playing and winning games. Then spend them on cosmetic upgrades and new ways to play coming in the future!</Text>
-                <Button title="Buy a new look ($100)" disabled={this.state.isPurchaseDisabled} onPress={this.purchasePrize} style={{ flex: 1 }} />
+                <Text style={styles.currencyTooltip}>Earn Block Bits (BB) by playing and winning games. Then spend them on cosmetic upgrades and new ways to play coming in the future!</Text>
+                <Button title="Buy a new look (100 BB)" onPress={this.onPressPurchasePrize} disabled={this.state.isPurchaseDisabled} style={{ flex: 1 }} />
+                <Button title="Watch an ad to earn a bonus 100 BB" onPress={this.onPressWatchAd} disabled={this.state.didWatchAd} style={{ flex: 1 }} />
             </View>
         )
     }

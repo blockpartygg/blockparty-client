@@ -1,18 +1,18 @@
 import THREE from '../../THREE';
 import firebase from '../../Firebase';
 import { TweenLite } from 'gsap';
-import robotoFont from '../../assets/fonts/Roboto_Regular.json';
 
 class RedLightGreenLightScene {
     player = {
         positionZ: 0,
         moving: false,
     }
+    playerName = "";
     
     greenLight = true;
     otherPlayers = [];
 
-    constructor(renderer) {
+    constructor(renderer, state) {
         this.renderer = renderer;
 
         this.setupScene();
@@ -36,20 +36,20 @@ class RedLightGreenLightScene {
 
         const fontLoader = new THREE.FontLoader();
         this.font = fontLoader.parse(require('../../assets/fonts/helvetiker_regular.typeface.json'));
-        const textGeometry = new THREE.TextGeometry("RonSolo", { font: this.font, size: 0.5, height: 0 });
+        const textGeometry = new THREE.TextGeometry("", { font: this.font, size: 0.5, height: 0 });
         const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
         this.textMesh = new THREE.Mesh(textGeometry, textMaterial);
-        this.textMesh.position.x = 1.2;
+        this.textMesh.position.x = 0;
         this.textMesh.position.y = 1.5;
         this.textMesh.rotation.y = Math.PI;
         this.playerGroup.add(this.textMesh);
 
         this.scene.add(this.playerGroup);
 
-        firebase.database().ref('players').orderByChild('playing').equalTo(true).on('value', snapshot => {
+        firebase.database.ref('players').orderByChild('playing').equalTo(true).on('value', snapshot => {
             let x = Math.floor(snapshot.numChildren() / 2) - snapshot.numChildren();
             snapshot.forEach(playerSnapshot => {
-                if(playerSnapshot.key === firebase.auth().currentUser.uid) {
+                if(playerSnapshot.key === firebase.uid) {
                     return;
                 }
 
@@ -80,7 +80,7 @@ class RedLightGreenLightScene {
                     const textGeometry = new THREE.TextGeometry(this.otherPlayers[playerSnapshot.key].name, { font: this.font, size: 0.5, height: 0 });
                     const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
                     this.otherPlayers[playerSnapshot.key].text = new THREE.Mesh(textGeometry, textMaterial);
-                    this.otherPlayers[playerSnapshot.key].text.position.x = 1.2;
+                    this.otherPlayers[playerSnapshot.key].text.position.x = 0;
                     this.otherPlayers[playerSnapshot.key].text.position.y = 1.5;
                     this.otherPlayers[playerSnapshot.key].text.rotation.y = Math.PI;
                     this.otherPlayers[playerSnapshot.key].group.add(this.otherPlayers[playerSnapshot.key].text);
@@ -90,23 +90,29 @@ class RedLightGreenLightScene {
             });
         });
 
-        firebase.database().ref('players/' + firebase.auth().currentUser.uid + '/currentSkin').on('value', snapshot => {
-            let currentSkin = snapshot.val();
-            if(currentSkin !== null) {
-                playerGeometry = geometries[currentSkin];
-            }
-            else {
-                playerGeometry = geometries[0];
-            }
+        firebase.database.ref('players/' + firebase.uid).on('value', snapshot => {
+            let player = snapshot.val();
+            let playerGeometry = geometries[player.currentSkin || 0];
+            let playerName = player.name;
+
             const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
             this.playerGroup.remove(this.playerMesh);
             this.playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
             this.playerGroup.add(this.playerMesh);
+
+            const textGeometry = new THREE.TextGeometry(playerName, { font: this.font, size: 0.5, height: 0 });
+            const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+            this.playerGroup.remove(this.textMesh);
+            this.textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            this.textMesh.position.x = 0;
+            this.textMesh.position.y = 1.5;
+            this.textMesh.rotation.y = Math.PI;
+            this.playerGroup.add(this.textMesh);
         });
 
-        firebase.database().ref('minigame/redLightGreenLight/players').on('value', snapshot => {
+        firebase.database.ref('minigame/redLightGreenLight/players').on('value', snapshot => {
             snapshot.forEach(player => {
-                if(player.key === firebase.auth().currentUser.uid) {
+                if(player.key === firebase.uid) {
                     return;
                 }
                 if(player.val()) {
@@ -129,7 +135,7 @@ class RedLightGreenLightScene {
                 }
             });
         });
-        firebase.database().ref('minigame/redLightGreenLight/greenLight').on('value', snapshot => {
+        firebase.database.ref('minigame/redLightGreenLight/greenLight').on('value', snapshot => {
             let greenLight = snapshot.val();
             this.greenLight = greenLight;
         })
@@ -211,8 +217,8 @@ class RedLightGreenLightScene {
     }
 
     sendPlayerState() {
-        if(firebase.auth().currentUser) {
-            firebase.database().ref('minigame/redLightGreenLight/players/' + firebase.auth().currentUser.uid).set(this.player);
+        if(firebase.isAuthed) {
+            firebase.database.ref('minigame/redLightGreenLight/players/' + firebase.uid).set(this.player);
         }
         else {
             this.props.history.replace('/');
@@ -272,7 +278,7 @@ class RedLightGreenLightScene {
     }
 
     shutdown() {
-        firebase.database().ref('minigame/redLightGreenLight/players').off();
+        firebase.database.ref('minigame/redLightGreenLight/players').off();
 
         clearInterval(this.sendStateInterval);
 

@@ -1,4 +1,5 @@
 import { Dimensions } from 'react-native';
+import { TweenLite } from 'gsap';
 import THREE from '../../THREE';
 import firebase from '../../Firebase';
 
@@ -15,12 +16,9 @@ class WhackABlockScene {
         this.renderer = renderer;
 
         this.setupScene();
+        this.setupCamera();
 
-        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-
-        this.raycaster = new THREE.Raycaster();
-
-        firebase.database().ref('minigame/whackABlock/blocks').on('child_added', snapshot => {
+        firebase.database.ref('minigame/whackABlock/blocks').on('child_added', snapshot => {
             let block = snapshot.val();
             this.blocks[snapshot.key] = new THREE.Mesh(this.blockGeometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
             this.blocks[snapshot.key].position.x = block.position.x;
@@ -35,8 +33,10 @@ class WhackABlockScene {
             this.blocks[snapshot.key].name = snapshot.key;
             this.scene.add(this.blocks[snapshot.key]);
         });
-        firebase.database().ref('minigame/whackABlock/blocks').on('child_removed', snapshot => {
-            this.scene.remove(this.blocks[snapshot.key]);
+        firebase.database.ref('minigame/whackABlock/blocks').on('child_removed', snapshot => {
+            let explodeDuration = 0.1;
+            TweenLite.to(this.blocks[snapshot.key].scale, explodeDuration, { x: 1.2, y: 1.2, z: 1.2 });
+            TweenLite.to(this.blocks[snapshot.key].scale, explodeDuration, { x: 0, y: 0, z: 0, delay: explodeDuration, onComplete: () => { this.scene.remove(this.blocks[snapshot.key]); }});
         });
     }
 
@@ -55,6 +55,11 @@ class WhackABlockScene {
         this.scene.add(directionalLight2);
     }
 
+    setupCamera() {
+        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        this.raycaster = new THREE.Raycaster();
+    }
+
     initialize() {
         
     }
@@ -68,8 +73,8 @@ class WhackABlockScene {
         if(intersects.length > 0) {
             let blockId = intersects[0].object.name;
             
-            firebase.database().ref('game/commands').push({
-                playerId: firebase.auth().currentUser.uid,
+            firebase.database.ref('game/commands').push({
+                playerId: firebase.uid,
                 blockId: blockId
             });
 
@@ -103,7 +108,7 @@ class WhackABlockScene {
     }
 
     shutdown() {
-        firebase.database().ref('minigame/whackABlock/blocks').off();
+        firebase.database.ref('minigame/whackABlock/blocks').off();
 
         while(this.scene.children.length > 0) { 
             this.scene.remove(this.scene.children[0]); 

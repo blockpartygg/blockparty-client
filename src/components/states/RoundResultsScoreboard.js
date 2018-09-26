@@ -9,11 +9,11 @@ export default class RoundResultsScoreboard extends React.Component {
     }
 
     componentWillMount() {
-        firebase.database().ref('players').on('value', snapshot => {
+        firebase.database.ref('players').on('value', snapshot => {
             this.setState({ players: snapshot.val() });
         });
 
-        firebase.database().ref('game/scoreboard').orderByValue().on('value', snapshot => {
+        firebase.database.ref('game/scoreboard').orderByValue().on('value', snapshot => {
             let scoreboard = [];
             snapshot.forEach(score => {
                 scoreboard.push({
@@ -58,7 +58,7 @@ export default class RoundResultsScoreboard extends React.Component {
     }
 
     componentWillUnmount() {
-        firebase.database().ref('players').off();
-        firebase.database().ref('game/scoreboard').off();
+        firebase.database.ref('players').off();
+        firebase.database.ref('game/scoreboard').off();
     }
 }

@@ -7,7 +7,7 @@ export default class Home extends React.Component {
     state = {
         uid: null,
         name: null,
-        bits: null,
+        currency: null,
         state: null,
         timeRemaining: null,
         endTime: null,
@@ -18,60 +18,65 @@ export default class Home extends React.Component {
     }
 
     componentWillMount() {
-        firebase.auth().onAuthStateChanged(user => {
+        firebase.auth.onAuthStateChanged(user => {
             if(!user) {
-                this.props.history.replace('/');
-            } else {
+                this.props.history.push('/');
+             } else {
                 this.setState({ uid: user.uid });
-                firebase.database().ref('players/' + user.uid).once('value', snapshot => {
+                console.log(firebase.database.ref('players').child(user.uid));
+                firebase.database.ref('players').child(user.uid).once('value', snapshot => {
                     let player = snapshot.val();
                     if(!player) {
-                        this.props.history.replace('/');
+                        firebase.signOut(() => {
+                            this.props.history.push('/');
+                        });
                     }
                     else {
                         if(!player.name) {
-                            this.props.history.replace('/');
+                            firebase.signOut(() => {
+                                this.props.history.push('/');
+                            });
                         }
                         else {
                             this.setState({ name: player.name });
-                            this.setState({ bits: player.currency });
+                            this.setState({ currency: player.currency });
                         }
                     }
                 });
             }
         });
 
-        firebase.database().ref('game/state').on('value', snapshot => {
+        firebase.database.ref('game/state').on('value', snapshot => {
             let state = snapshot.val();
             if(state) {
                 this.setState({ state: state });
             }
         });
-        firebase.database().ref('game/endTime').on('value', snapshot => {
+        firebase.database.ref('game/endTime').on('value', snapshot => {
             let endTime = snapshot.val();
             if(endTime) {
                 this.setState({ endTime: endTime });
             }
         });
-        firebase.database().ref('game/round').on('value', snapshot => {
+        firebase.database.ref('game/round').on('value', snapshot => {
             let round = snapshot.val();
             if(round) {
                 this.setState({ round: round });
             }
         });
-        firebase.database().ref('game/minigame').on('value', snapshot => {
+        firebase.database.ref('game/minigame').on('value', snapshot => {
             let minigame = snapshot.val();
             if(minigame) {
                 this.setState({ minigame: minigame });
             }
         });
-        firebase.database().ref('game/mode').on('value', snapshot => {
+        firebase.database.ref('game/mode').on('value', snapshot => {
             let mode = snapshot.val();
             if(mode) {
                 this.setState({ mode: mode });
             }
         });
-        firebase.database().ref('messages').limitToLast(20).on('child_added', snapshot => {
+        firebase.database.ref('messages').limitToLast(20).on('child_added', snapshot => {
             const { timestamp: numberStamp, text, user } = snapshot.val();
             const { key: _id } = snapshot;
             const timestamp = new Date(numberStamp);
@@ -100,21 +105,21 @@ export default class Home extends React.Component {
     }
 
     onPressSignOut = () => {
-        firebase.auth().signOut().then(() => {
+        firebase.signOut(() => {
             this.props.history.push('/');
         });
     }
 
     onPressPlay = () => { 
-        firebase.database().ref('players/' + firebase.auth().currentUser.uid).update({ playing: true });
+        firebase.database.ref('players/' + firebase.uid).update({ playing: true });
         this.props.history.push('/play'); 
     }
 
     onSend = messages => {
         for(let i = 0; i < messages.length; i++) {
             const { text, user } = messages[i];
-            let timestamp = firebase.database.ServerValue.TIMESTAMP;
-            firebase.database().ref('messages').push({ text, user, timestamp });
+            let timestamp = firebase.timestamp;
+            firebase.database.ref('messages').push({ text, user, timestamp });
         }
     }
 
@@ -172,7 +177,7 @@ export default class Home extends React.Component {
                     </View>
                     <View style={styles.playerBadge}>
                         <Text style={styles.playerBadgeName}>{nameString}</Text>
-                        <Text style={styles.playerBadgeBits}>{this.state.bits && this.state.bits + ' bits'}</Text>
+                        <Text style={styles.playerBadgeBits}>{this.state.currency && this.state.currency + ' bits'}</Text>
                     </View>
                 </View>
                 <View style={styles.gameState}>
@@ -190,12 +195,12 @@ export default class Home extends React.Component {
     }
 
     componentWillUnmount() {
-        firebase.database().ref('game/state').off();
-        firebase.database().ref('game/endTime').off();
-        firebase.database().ref('game/round').off();
-        firebase.database().ref('game/minigame').off();
-        firebase.database().ref('game/mode').off();
-        firebase.database().ref('messages').off();
+        firebase.database.ref('game/state').off();
+        firebase.database.ref('game/endTime').off();
+        firebase.database.ref('game/round').off();
+        firebase.database.ref('game/minigame').off();
+        firebase.database.ref('game/mode').off();
+        firebase.database.ref('messages').off();
 
         clearInterval(this.updateInterval);
     }
