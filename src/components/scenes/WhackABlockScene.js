@@ -19,7 +19,8 @@ class WhackABlockScene {
 
     setupScene() {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x888888);
+        let sceneColor = new THREE.Color(0x888888);
+        this.scene.background = sceneColor;
         this.scene.fog = new THREE.Fog(sceneColor, 1, 1000);
 
         let directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
@@ -35,6 +36,7 @@ class WhackABlockScene {
         this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
         this.cameraRotation = 0;
         this.cameraRadius = 100;
+        
         this.raycaster = new THREE.Raycaster();
     }
 
