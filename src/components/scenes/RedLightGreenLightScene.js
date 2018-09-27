@@ -261,10 +261,6 @@ class RedLightGreenLightScene {
         this.camera.position.y = this.cameraOffset.y;
         this.camera.position.z = this.playerGroup.position.z + this.cameraOffset.z;
 
-        // for(key in Object.keys(this.otherPlayers)) {
-        //     this.otherPlayers[key].mesh.position.z = this.otherPlayers[key].positionZ;
-        // }
-
         if(this.greenLight) {
             this.scene.background = this.sceneGreenColor;
         }
