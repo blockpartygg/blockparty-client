@@ -257,6 +257,9 @@ export default class Play extends React.Component {
             case "roundResultsScoreboard":
             case "roundResultsLeaderboard":
             case "postgameCelebration":
+                if(this.scene && this.scene.shutdown) {
+                    this.scene.shutdown();
+                }
                 this.scene = this.backgroundScene;
                 break;
             case "postgameRewards":
