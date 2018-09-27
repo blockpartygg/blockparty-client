@@ -4,13 +4,17 @@ import THREE from '../../THREE';
 import firebase from '../../Firebase';
 
 class WhackABlockScene {
+    players = [];
     blocks = [];
-    blockGeometry = new THREE.BoxBufferGeometry(20, 20, 20);
+    textMeshes = [];
+    blockGeometry = new THREE.BoxBufferGeometry();
     cameraRotation = 0;
     cameraRadius = 100;
     touch = new THREE.Vector2();
     intersected;
     dimensions = Dimensions.get('window');
+    fontLoader = new THREE.FontLoader();
+    font = this.fontLoader.parse(require('../../assets/fonts/helvetiker_regular.typeface.json'));
 
     constructor(renderer) {
         this.renderer = renderer;
@@ -18,24 +22,49 @@ class WhackABlockScene {
         this.setupScene();
         this.setupCamera();
 
+        firebase.database.ref('players').on('value', snapshot => {
+            snapshot.forEach(playerSnapshot => {
+                this.players[playerSnapshot.key] = playerSnapshot.val();
+            })
+        });
+
         firebase.database.ref('minigame/whackABlock/blocks').on('child_added', snapshot => {
             let block = snapshot.val();
             this.blocks[snapshot.key] = new THREE.Mesh(this.blockGeometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
             this.blocks[snapshot.key].position.x = block.position.x;
             this.blocks[snapshot.key].position.y = block.position.y;
             this.blocks[snapshot.key].position.z = block.position.z;
-            this.blocks[snapshot.key].scale.x = block.scale.x;
-            this.blocks[snapshot.key].scale.y = block.scale.y;
-            this.blocks[snapshot.key].scale.z = block.scale.z;
+            this.blocks[snapshot.key].scale.x = 0;
+            this.blocks[snapshot.key].scale.y = 0;
+            this.blocks[snapshot.key].scale.z = 0;
             this.blocks[snapshot.key].rotation.x = block.rotation.x;
             this.blocks[snapshot.key].rotation.y = block.rotation.y;
             this.blocks[snapshot.key].rotation.z = block.rotation.z;
             this.blocks[snapshot.key].name = snapshot.key;
+            let expandDuration = 0.5;
+            TweenLite.to(this.blocks[snapshot.key].scale, expandDuration, { x: block.scale.x * 1.5, y: block.scale.y * 1.5, z: block.scale.z * 1.5 });
+            TweenLite.to(this.blocks[snapshot.key].scale, expandDuration, { x: block.scale.x, y: block.scale.y, z: block.scale.z, delay: expandDuration });
             this.scene.add(this.blocks[snapshot.key]);
         });
+
         firebase.database.ref('minigame/whackABlock/blocks').on('child_removed', snapshot => {
-            let explodeDuration = 0.1;
-            TweenLite.to(this.blocks[snapshot.key].scale, explodeDuration, { x: 1.2, y: 1.2, z: 1.2 });
+            let block = snapshot.val();
+            if(block && block.playerId && this.players[block.playerId]) {
+                let textGeometry = new THREE.TextGeometry(this.players[block.playerId].name, { font: this.font, size: 5, height: 0 });
+                let textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+                this.textMeshes[snapshot.key] = new THREE.Mesh(textGeometry, textMaterial);
+                this.textMeshes[snapshot.key].position.x = block.position.x;
+                this.textMeshes[snapshot.key].position.y = block.position.y;
+                this.textMeshes[snapshot.key].position.z = block.position.z;
+                this.textMeshes[snapshot.key].material.transparent = true;
+                this.textMeshes[snapshot.key].material.opacity = 1;
+                this.scene.add(this.textMeshes[snapshot.key]);
+                let fadeDuration = 2;
+                this.textMeshes[snapshot.key].tween = TweenLite.to(this.textMeshes[snapshot.key].material, fadeDuration, { opacity: 0, onComplete: () => { this.scene.remove(this.textMeshes[snapshot.key]); } });
+            }
+
+            let explodeDuration = 0.5;
+            TweenLite.to(this.blocks[snapshot.key].scale, explodeDuration, { x: 1.5, y: 1.5, z: 1.5 });
             TweenLite.to(this.blocks[snapshot.key].scale, explodeDuration, { x: 0, y: 0, z: 0, delay: explodeDuration, onComplete: () => { this.scene.remove(this.blocks[snapshot.key]); }});
         });
     }
