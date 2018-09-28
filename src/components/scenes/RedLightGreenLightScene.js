@@ -43,12 +43,6 @@ class RedLightGreenLightScene {
     }
 
     setupGround() {
-        const groundGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
-        const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x333333, overdraw: 0.5 });
-        this.groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
-        this.groundMesh.position.y = -1;
-        this.scene.add(this.groundMesh);
-
         const lineGeometry = new THREE.Geometry();
         for(let x = -500; x <= 500; x += 1) {
             lineGeometry.vertices.push(
