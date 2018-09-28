@@ -209,9 +209,6 @@ class RedLightGreenLightScene {
         if(firebase.isAuthed) {
             firebase.database.ref('minigame/redLightGreenLight/players/' + firebase.uid).set(this.player);
         }
-        else {
-            this.props.history.replace('/');
-        }
     }
 
     onTouchesBegan(state) {

@@ -129,9 +129,6 @@ class BlockioScene {
         if(firebase.isAuthed) {
             firebase.database.ref('minigame/blockio/players/' + firebase.uid).set(this.player);
         }
-        else {
-            this.props.history.replace('/');
-        }
     }
 
     onTouchesBegan(state) {
