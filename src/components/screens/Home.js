@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Button, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { GiftedChat } from 'react-native-gifted-chat';
 import firebase from '../../Firebase';
 
@@ -7,7 +7,9 @@ export default class Home extends React.Component {
     state = {
         uid: null,
         name: null,
+        currency: null,
         state: null,
+        timeRemaining: null,
         endTime: null,
         round: null,
         minigame: null,
@@ -16,59 +18,64 @@ export default class Home extends React.Component {
     }
 
     componentWillMount() {
-        firebase.auth().onAuthStateChanged(user => {
+        firebase.auth.onAuthStateChanged(user => {
             if(!user) {
-                this.props.history.replace('/');
-            } else {
+                this.props.history.push('/');
+             } else {
                 this.setState({ uid: user.uid });
-                firebase.database().ref('players/' + user.uid).once('value', snapshot => {
+                firebase.database.ref('players').child(user.uid).once('value', snapshot => {
                     let player = snapshot.val();
                     if(!player) {
-                        this.props.history.replace('/');
+                        firebase.signOut(() => {
+                            this.props.history.push('/');
+                        });
                     }
                     else {
                         if(!player.name) {
-                            this.props.history.replace('/');
+                            firebase.signOut(() => {
+                                this.props.history.push('/');
+                            });
                         }
                         else {
                             this.setState({ name: player.name });
+                            this.setState({ currency: player.currency });
                         }
                     }
                 });
             }
         });
 
-        firebase.database().ref('game/state').on('value', snapshot => {
+        firebase.database.ref('game/state').on('value', snapshot => {
             let state = snapshot.val();
             if(state) {
                 this.setState({ state: state });
             }
         });
-        firebase.database().ref('game/endTime').on('value', snapshot => {
+        firebase.database.ref('game/endTime').on('value', snapshot => {
             let endTime = snapshot.val();
             if(endTime) {
                 this.setState({ endTime: endTime });
             }
         });
-        firebase.database().ref('game/round').on('value', snapshot => {
+        firebase.database.ref('game/round').on('value', snapshot => {
             let round = snapshot.val();
             if(round) {
                 this.setState({ round: round });
             }
         });
-        firebase.database().ref('game/minigame').on('value', snapshot => {
+        firebase.database.ref('game/minigame').on('value', snapshot => {
             let minigame = snapshot.val();
             if(minigame) {
                 this.setState({ minigame: minigame });
             }
         });
-        firebase.database().ref('game/mode').on('value', snapshot => {
+        firebase.database.ref('game/mode').on('value', snapshot => {
             let mode = snapshot.val();
             if(mode) {
                 this.setState({ mode: mode });
             }
         });
-        firebase.database().ref('messages').limitToLast(20).on('child_added', snapshot => {
+        firebase.database.ref('messages').limitToLast(20).on('child_added', snapshot => {
             const { timestamp: numberStamp, text, user } = snapshot.val();
             const { key: _id } = snapshot;
             const timestamp = new Date(numberStamp);
@@ -82,24 +89,36 @@ export default class Home extends React.Component {
                 messages: GiftedChat.append && GiftedChat.append(previousState.messages, message),
             }));
         });
+
+        this.updateInterval = setInterval(() => { this.update(); }, 1000);
+    }
+
+    update() {
+        if(this.state.endTime != null) {
+            let timeRemaining = new Date(new Date(this.state.endTime).getTime() - Date.now());
+            let minutes = timeRemaining.getMinutes();
+            let seconds = timeRemaining.getSeconds() < 10 ? '0' + timeRemaining.getSeconds() : timeRemaining.getSeconds();
+            let timeRemainingFormatted = `${minutes}:${seconds}`;
+            this.setState({ timeRemaining: timeRemainingFormatted });
+        }
     }
 
     onPressSignOut = () => {
-        firebase.auth().signOut().then(() => {
+        firebase.signOut(() => {
             this.props.history.push('/');
         });
     }
 
     onPressPlay = () => { 
-        firebase.database().ref('players/' + firebase.auth().currentUser.uid).update({ playing: true });
+        firebase.database.ref('players/' + firebase.uid).update({ playing: true });
         this.props.history.push('/play'); 
     }
 
     onSend = messages => {
         for(let i = 0; i < messages.length; i++) {
             const { text, user } = messages[i];
-            let timestamp = firebase.database.ServerValue.TIMESTAMP;
-            firebase.database().ref('messages').push({ text, user, timestamp });
+            let timestamp = firebase.timestamp;
+            firebase.database.ref('messages').push({ text, user, timestamp });
         }
     }
 
@@ -111,6 +130,12 @@ export default class Home extends React.Component {
     }
 
     render() {
+        let nameString = "";
+        if(this.state.name) {
+            let regEx = /[A-Z]/g;
+            nameString = this.state.name.match(regEx);
+        }
+
         let stateString;
         switch(this.state.state) {
             case "pregameCountdown":
@@ -143,14 +168,23 @@ export default class Home extends React.Component {
         return(
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <Button title="Sign out" onPress={this.onPressSignOut} style={styles.signOutButton} />
-                    <View style={styles.gameState}>
-                        <Text style={styles.gameStateText}>{stateString}</Text>
-                        <Button title="Play" onPress={this.onPressPlay} style={{ flex: 1 }} />
+                    <TouchableOpacity onPress={this.onPressSignOut} style={styles.signOutButton}>
+                        <Text style={styles.signOutButtonText}>Sign out</Text>
+                    </TouchableOpacity>
+                    <View style={styles.homeLabel}>
+                        <Text style={styles.homeLabelText}>Lobby</Text>
                     </View>
                     <View style={styles.playerBadge}>
-                        <Text style={styles.playerBadgeName}>{this.state.name}</Text>
+                        <Text style={styles.playerBadgeName}>{nameString}</Text>
+                        <Text style={styles.playerBadgeBits}>{this.state.currency && this.state.currency + ' bits'}</Text>
                     </View>
+                </View>
+                <View style={styles.gameState}>
+                    <Text style={styles.gameStateTimeRemainingText}>{this.state.timeRemaining}</Text>
+                    <Text style={styles.gameStateText}>{stateString}</Text>
+                    <TouchableOpacity onPress={this.onPressPlay} style={styles.playButton}>
+                        <Text style={styles.playButtonText}>Play</Text>
+                    </TouchableOpacity>
                 </View>
                 <View style={styles.chat}>
                     <GiftedChat messages={this.state.messages} onSend={this.onSend} user={this.user} />
@@ -158,61 +192,117 @@ export default class Home extends React.Component {
             </View>
         )
     }
+
+    componentWillUnmount() {
+        firebase.database.ref('game/state').off();
+        firebase.database.ref('game/endTime').off();
+        firebase.database.ref('game/round').off();
+        firebase.database.ref('game/minigame').off();
+        firebase.database.ref('game/mode').off();
+        firebase.database.ref('messages').off();
+
+        clearInterval(this.updateInterval);
+    }
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1
+        flex: 1,
+        backgroundColor: "#570C76"
     },
     header: {
-        position: "absolute", 
-        left: 0,
-        right: 0,
-        top: 0, 
-        height: 100,
-        paddingTop: 40,
-        backgroundColor: "blue",
+        marginTop: 50,
+        height: 75,
         flexDirection: 'row',
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 10,
+    },
+    signOutButton: { 
+        position: "absolute",
+        left: 0,
+        top: 0,
+        width: 125,
+        height: 50,
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        zIndex: 10
+        backgroundColor: "white", 
+        borderWidth: 5, 
+        borderColor: "#DBD9DB",
+        zIndex: 20,
     },
-    signOutButton: {
-        position: 'absolute',
-        left: 0,
-        paddingLeft: 10,
-        flex: 1
-    },
-    gameState: {
-        flex: 1,
-        marginLeft: 10,
-        marginRight: 70,
-    },
-    gameStateText: { 
-        fontSize: 20,
+    signOutButtonText: { 
+        fontSize: 24,
         fontWeight: "bold",
-        textAlign: "center",
-        color: "white",
+        textAlign: "center", 
+        color: "#570C76" 
+    },
+    homeLabel: {
+        height: "100%",
+        marginTop: 50,
+        marginRight: 10,
+        flex: 1,
+        justifyContent: "center",
+        backgroundColor: "#EE3AAF",
+        borderWidth: 5,
+        borderColor: "#B4287D"
+    },
+    homeLabelText: {
+        padding: 15,
+        fontSize: 24,
+        fontWeight: "bold",
+        color: "white"
     },
     playerBadge: {
-        position: 'absolute',
-        right: 0,
-        top: 40,
-        marginRight: 10,
-        width: 50,
-        height: 50,
+        width: 75,
+        height: 75,
+        marginTop: 50,
         backgroundColor: "white",
-        borderRadius: 5,
-        flex: 1,
+        borderWidth: 5,
+        borderColor: "#DBD9DB",
         justifyContent: "center",
         alignItems: "center"
     },
     playerBadgeName: {
-        
+        fontSize: 24,
+        fontWeight: "bold",
+        textAlign: "left", 
+        color: "#570C76"
+    },
+    gameState: {
+        marginTop: 20,
+    },
+    gameStateTimeRemainingText: {
+        fontSize: 64,
+        fontWeight: "bold",
+        textAlign: "left",
+        color: "white"
+    },
+    gameStateText: { 
+        fontSize: 20,
+        fontWeight: "bold",
+        textAlign: "left",
+        color: "white",
+    },
+    playButton: {
+        margin: 10,
+        justifyContent: "center",
+        backgroundColor: "#EE3AAF",
+        borderWidth: 5,
+        borderColor: "#B4287D"
+    },
+    playButtonText: {
+        padding: 10,
+        fontSize: 24,
+        fontWeight: "bold",
+        textAlign: "center",
+        color: "white"
     },
     chat: {
+        marginLeft: 10,
+        marginRight: 10,
+        marginBottom: 20,
         flex: 1,
-        backgroundColor: "#570C76"
     }
 });

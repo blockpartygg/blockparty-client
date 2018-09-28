@@ -63,7 +63,7 @@ class BlockioScene {
         }
 
         this.foodGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-        firebase.database().ref('minigame/blockio/food').on('child_added', snapshot => {
+        firebase.database.ref('minigame/blockio/food').on('child_added', snapshot => {
             let food = snapshot.val();
             this.food[snapshot.key] = new THREE.Mesh(this.foodGeometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
             this.food[snapshot.key].position.x = food.position.x;
@@ -71,14 +71,14 @@ class BlockioScene {
             this.food[snapshot.key].name = snapshot.key;
             this.scene.add(this.food[snapshot.key]);
         });
-        firebase.database().ref('minigame/blockio/food').on('child_removed', snapshot => {
+        firebase.database.ref('minigame/blockio/food').on('child_removed', snapshot => {
             this.scene.remove(this.food[snapshot.key]);
         });
 
-        firebase.database().ref('minigame/blockio/players').on('value', snapshot => {
+        firebase.database.ref('minigame/blockio/players').on('value', snapshot => {
             let index = 0;
             snapshot.forEach(player => {
-                if(player.key === firebase.auth().currentUser.uid) {
+                if(player.key === firebase.uid) {
                     return;
                 }
                 if(this.otherPlayers[index] && player.val()) {
@@ -126,8 +126,8 @@ class BlockioScene {
     }
 
     sendPlayerState() {
-        if(firebase.auth().currentUser) {
-            firebase.database().ref('minigame/blockio/players/' + firebase.auth().currentUser.uid).set(this.player);
+        if(firebase.isAuthed) {
+            firebase.database.ref('minigame/blockio/players/' + firebase.uid).set(this.player);
         }
         else {
             this.props.history.replace('/');
@@ -186,8 +186,8 @@ class BlockioScene {
             let distance = deltaX * deltaX + deltaY * deltaY;
             if(distance < 1) {
                 let foodId = food.name;
-                firebase.database().ref('game/commands').push({
-                    playerId: firebase.auth().currentUser.uid,
+                firebase.database.ref('game/commands').push({
+                    playerId: firebase.uid,
                     foodId: foodId
                 });
             }
@@ -210,8 +210,8 @@ class BlockioScene {
     }
 
     shutdown() {
-        firebase.database().ref('minigame/blockio/players').off();
-        firebase.database().ref('minigame/blockio/food').off();
+        firebase.database.ref('minigame/blockio/players').off();
+        firebase.database.ref('minigame/blockio/food').off();
 
         clearInterval(this.sendStateInterval);
 

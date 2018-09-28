@@ -9,11 +9,11 @@ export default class PostgameCelebration extends React.Component {
     }
 
     componentWillMount() {
-        firebase.database().ref('players').on('value', snapshot => {
+        firebase.database.ref('players').on('value', snapshot => {
             this.setState({ players: snapshot.val() });
         });
 
-        firebase.database().ref('game/leaderboard').orderByValue().on('value', snapshot => {
+        firebase.database.ref('game/leaderboard').orderByValue().on('value', snapshot => {
             let leaderboard = [];
             snapshot.forEach(score => {
                 leaderboard.push({
@@ -58,7 +58,7 @@ export default class PostgameCelebration extends React.Component {
     }
 
     componentWillUnmount() {
-        firebase.database().ref('players').off();
-        firebase.database().ref('game/leaderboard').off();
+        firebase.database.ref('players').off();
+        firebase.database.ref('game/leaderboard').off();
     }
 }

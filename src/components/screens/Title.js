@@ -12,14 +12,7 @@ export default class Title extends React.Component {
     playDestination = 'signIn';
 
     componentWillMount() {
-        firebase.auth().onAuthStateChanged(user => {
-            if(user) {
-                this.playDestination = 'home';
-            }
-            else {
-                this.getPlayerAccountCreated();
-            }
-        });
+        this.getPlayerAccountCreated();
 
         Animated.parallel([
             Animated.timing(this.state.translateAnimation, { toValue: 0, duration: 1000 }),
@@ -42,14 +35,11 @@ export default class Title extends React.Component {
     }
 
     handlePlay = () => {
-        if(this.playDestination === 'home') {
-            firebase.database().ref('.info/connected').on('value', snapshot => {
-                if(snapshot.val()) {
-                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).onDisconnect().remove();
-                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).set(true);
-                }
-            });
+        if(firebase.isAuthed) {
+            this.playDestination = 'home';
+            firebase.setupPresence();
         }
+        
         this.props.history.push(this.playDestination);
     }
 

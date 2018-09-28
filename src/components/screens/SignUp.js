@@ -1,5 +1,5 @@
 import React from 'react';
-import { AsyncStorage, View, KeyboardAvoidingView, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { View, KeyboardAvoidingView, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import firebase from '../../Firebase';
 
@@ -14,44 +14,21 @@ export default class SignUp extends React.Component {
     }
 
     handleSignUp = (event) => {
-        firebase.auth().createUserWithEmailAndPassword(this.state.email, this.state.password).then(() => {
-            firebase.database().ref('players/' + firebase.auth().currentUser.uid).set({ name: this.state.name, currency: 0 });
-            firebase.database().ref('.info/connected').on('value', snapshot => {
-                if(snapshot.val()) {
-                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).onDisconnect().remove();
-                    firebase.database().ref('presence/' + firebase.auth().currentUser.uid).set(true);
-                }
-            });
-            this.setPlayerAccountCreated();
+        firebase.signUp(this.state.email, this.state.password, this.state.name, () => {
             this.props.history.push('/home');
-        }).catch(error => {
+        }, error => {
             this.setState({ error: error });
         });
         event.preventDefault();
     }
 
-    setPlayerAccountCreated = async () => {
-        try {
-            await AsyncStorage.setItem('playerAccountCreated', 'true');
-        } catch(error) {
-            console.log(error);
-        }
-    }
-
     handlePlayAsGuest = (event) => {
-        if(this.state.name !== '') {
-            firebase.auth().signInAnonymously().then(() => {
-                firebase.database().ref('.info/connected').on('value', snapshot => {
-                    if(snapshot.val()) {
-                        firebase.database().ref('players/' + firebase.auth().currentUser.uid).onDisconnect().remove();
-                        firebase.database().ref('players/' + firebase.auth().currentUser.uid).set({ name: this.state.name, playing: true });
-                    }
-                });
-                this.props.history.push('/home');
-            }).catch(error => {
-                this.setState({ playAsGuestError: error });
-            });
-        }
+        firebase.signInAsGuest(this.state.guestName, () => {
+            this.props.history.push('/home');
+        }, error => {
+            this.setState({ error: error });
+        });
+        event.preventDefault();
     }
 
     onPressBack = () => {

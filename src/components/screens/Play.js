@@ -27,6 +27,8 @@ import PostgameRewardsScene from '../scenes/PostgameRewardsScene';
 
 export default class Play extends React.Component {
     state = {
+        name: null,
+        bits: null,
         state: null,
         endTime: null,
         round: null,
@@ -44,11 +46,11 @@ export default class Play extends React.Component {
     }
 
     componentWillMount() {
-        firebase.auth().onAuthStateChanged(user => {
+        firebase.auth.onAuthStateChanged(user => {
             if(!user) {
                 this.props.history.replace('/');
             } else {
-                firebase.database().ref('players/' + user.uid).once('value', snapshot => {
+                firebase.database.ref('players/' + user.uid).once('value', snapshot => {
                     let player = snapshot.val();
                     if(!player) {
                         this.props.history.replace('/');
@@ -57,49 +59,66 @@ export default class Play extends React.Component {
                         if(!player.name) {
                             this.props.history.replace('/');
                         }
+                        else {
+                            this.setState({ name: player.name });
+                            if(this.redLightGreenLightScene) {
+                                this.redLightGreenLightScene.playerName = player.name;
+                            }
+                        }
                     }
                 });
             }
         });
 
-        firebase.database().ref('game/state').on('value', snapshot => {
+        firebase.database.ref('game/state').on('value', snapshot => {
             let state = snapshot.val();
             if(state) {
                 this.setState({ state: state });
             }
         });
-        firebase.database().ref('game/endTime').on('value', snapshot => {
+        firebase.database.ref('game/endTime').on('value', snapshot => {
             let endTime = snapshot.val();
             if(endTime) {
                 this.setState({ endTime: endTime });
             }
         });
-        firebase.database().ref('game/round').on('value', snapshot => {
+        firebase.database.ref('game/round').on('value', snapshot => {
             let round = snapshot.val();
             if(round) {
                 this.setState({ round: round });
             }
         });
-        firebase.database().ref('game/minigame').on('value', snapshot => {
+        firebase.database.ref('game/minigame').on('value', snapshot => {
             let minigame = snapshot.val();
             if(minigame) {
                 this.setState({ minigame: minigame });
             }
         });
-        firebase.database().ref('game/mode').on('value', snapshot => {
+        firebase.database.ref('game/mode').on('value', snapshot => {
             let mode = snapshot.val();
             if(mode) {
                 this.setState({ mode: mode });
             }
         });
+        firebase.database.ref('players/' + firebase.uid + '/currency').on('value', snapshot => {
+            let bits = snapshot.val();
+            if(bits) {
+                this.setState({ bits: bits });
+            }
+        });
     }
 
     startPurchase() {
-        this.postgameRewardsScene.startPurchase();
+        if(this.state.bits >= 100) {
+            firebase.database.ref('players/' + firebase.uid + '/currency').set(this.state.bits - 100);
+            let skinId = Math.floor(Math.random() * 5);
+            firebase.database.ref('players/' + firebase.uid + '/currentSkin').set(skinId);
+            this.postgameRewardsScene.startPurchase();
+        }
     }
 
     onPressBack = () => { 
-        firebase.database().ref('players/' + firebase.auth().currentUser.uid).update({ playing: false });
+        firebase.database.ref('players/' + firebase.uid).update({ playing: false });
         this.props.history.goBack(); 
     }
 
@@ -160,7 +179,7 @@ export default class Play extends React.Component {
                 overlay = <PostgameCelebration />
                 break;
             case "postgameRewards":
-                overlay = <PostgameRewardsWithRouter startPurchase={this.startPurchase} />
+                overlay = <PostgameRewardsWithRouter name={this.state.name} bits={this.state.bits} startPurchase={this.startPurchase} />
                 break;
             default:
                 console.log(`invalid game state: ${this.state.state}`);
@@ -177,7 +196,7 @@ export default class Play extends React.Component {
         this.renderer = new ExpoTHREE.Renderer({ gl, width, height, pixelRatio });
         this.backgroundScene = new BackgroundScene(this.renderer);
         this.postgameRewardsScene = new PostgameRewardsScene(this.renderer);
-        this.redLightGreenLightScene = new RedLightGreenLightScene(this.renderer);
+        this.redLightGreenLightScene = new RedLightGreenLightScene(this.renderer, this.state);
         this.whackABlockScene = new WhackABlockScene(this.renderer);
         this.blockioScene = new BlockioScene(this.renderer);
     }
@@ -238,10 +257,14 @@ export default class Play extends React.Component {
             case "roundResultsScoreboard":
             case "roundResultsLeaderboard":
             case "postgameCelebration":
+                if(this.scene && this.scene.shutdown) {
+                    this.scene.shutdown();
+                }
                 this.scene = this.backgroundScene;
                 break;
             case "postgameRewards":
                 this.scene = this.postgameRewardsScene;
+                this.scene.initialize();
                 break;
             default:
                 break;
@@ -271,10 +294,10 @@ export default class Play extends React.Component {
     }
 
     componentWillUnmount() {
-        firebase.database().ref('game/state').off();
-        firebase.database().ref('game/endTime').off();
-        firebase.database().ref('game/round').off();
-        firebase.database().ref('game/minigame').off();
-        firebase.database().ref('game/mode').off();
+        firebase.database.ref('game/state').off();
+        firebase.database.ref('game/endTime').off();
+        firebase.database.ref('game/round').off();
+        firebase.database.ref('game/minigame').off();
+        firebase.database.ref('game/mode').off();
     }
 }
