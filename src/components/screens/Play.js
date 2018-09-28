@@ -112,7 +112,7 @@ export default class Play extends React.Component {
         if(this.state.bits >= 100) {
             firebase.database.ref('players/' + firebase.uid + '/currency').set(this.state.bits - 100);
             let skinId = Math.floor(Math.random() * 5);
-            firebase.database().ref('players/' + firebase.uid + '/currentSkin').set(skinId);
+            firebase.database.ref('players/' + firebase.uid + '/currentSkin').set(skinId);
             this.postgameRewardsScene.startPurchase();
         }
     }
