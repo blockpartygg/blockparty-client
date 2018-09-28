@@ -23,7 +23,6 @@ export default class Home extends React.Component {
                 this.props.history.push('/');
              } else {
                 this.setState({ uid: user.uid });
-                console.log(firebase.database.ref('players').child(user.uid));
                 firebase.database.ref('players').child(user.uid).once('value', snapshot => {
                     let player = snapshot.val();
                     if(!player) {
