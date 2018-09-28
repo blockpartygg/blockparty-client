@@ -7,20 +7,17 @@ import { withRouter } from '../../Routing';
 
 class PostgameRewards extends React.Component {
     state = {
-        name: '',
-        currency: 0,
-        currencyGain: 100,
+        currency: null,
+        currencyGain: null,
         isPurchaseDisabled: false,
         didWatchAd: false,
     };
 
     currency = {
-        tween: null,
         value: 0
     }
 
     currencyGain = {
-        tween: null,
         value: 100
     }
 
@@ -32,6 +29,18 @@ class PostgameRewards extends React.Component {
     }
 
     componentWillMount() {
+        firebase.database.ref('players/' + firebase.uid).on('value', snapshot => {
+            let player = snapshot.val();
+            if(player) {
+                this.setState({ currency: player.currency - 100 });
+                this.currency.value = player.currency - 100;
+                this.currencyGain.value = 100;
+                let currencyTotal = this.currency.value + this.currencyGain.value;
+                TweenLite.to(this.currency, 3, { value: currencyTotal, delay: 2 });
+                TweenLite.to(this.currencyGain, 3, { value: 0, delay: 2 });
+            }
+        });
+
         let adUnitId;
         // adUnitId = 'ca-app-pub-6023984980488094/1926752312'; // Production
         adUnitId = 'ca-app-pub-3940256099942544/1712485313'; // Development
@@ -53,9 +62,10 @@ class PostgameRewards extends React.Component {
     }
 
     onRewardedVideoDidClose = () => {
-        this.currency.value = 0;
+        this.currency.value = this.state.currency;
         this.currencyGain.value = 100;
-        TweenLite.to(this.currency, 3, { value: /* current value + */ this.state.currencyGain, delay: 2 });
+        let currencyTotal = this.currency.value;
+        TweenLite.to(this.currency, 3, { value: currencyTotal, delay: 2 });
         TweenLite.to(this.currencyGain, 3, { value: 0, delay: 2 });
     }
 
@@ -64,10 +74,6 @@ class PostgameRewards extends React.Component {
     }
 
     componentDidMount() {
-        this.currency.value = this.props.bits;
-        TweenLite.to(this.currency, 3, { value: /* this.props.bits + */this.state.currencyGain, delay: 2 });
-        TweenLite.to(this.currencyGain, 3, { value: 0, delay: 2 });
-        
         this.raf = requestAnimationFrame(this.update);
     }    
 
@@ -79,7 +85,8 @@ class PostgameRewards extends React.Component {
 
     onPressPurchasePrize() {
         this.setState({ isPurchaseDisabled: true });
-        this.currency.tween = TweenLite.to(this.currency, 3, { value: this.props.bits - 100 });
+        this.currency.value = this.state.currency;
+        TweenLite.to(this.currency, 3, { value: this.state.currency - 100 });
         this.props.startPurchase();
     }
 
@@ -111,6 +118,7 @@ class PostgameRewards extends React.Component {
     }
 
     componentWillUnmount() {
+        AdMobRewarded.removeAllListeners();
         cancelAnimationFrame(this.raf);
     }
 }
