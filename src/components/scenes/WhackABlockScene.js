@@ -87,12 +87,22 @@ class WhackABlockScene {
                 this.nameTexts[snapshot.key].material.opacity = 1;
                 this.scene.add(this.nameTexts[snapshot.key]);
                 let fadeDuration = 2;
-                TweenLite.to(this.nameTexts[snapshot.key].material, fadeDuration, { opacity: 0, onComplete: () => { this.scene.remove(this.nameTexts[snapshot.key]); this.nameTexts[snapshot.key] = null; } });
+                TweenLite.to(this.nameTexts[snapshot.key].material, fadeDuration, { opacity: 0, onComplete: () => {
+                    if(this.scene) {
+                        this.scene.remove(this.nameTexts[snapshot.key]);
+                    }
+                    this.nameTexts[snapshot.key] = null; 
+                }});
             }
 
             let explodeDuration = 0.5;
             TweenLite.to(this.blocks[snapshot.key].scale, explodeDuration, { x: 1.5, y: 1.5, z: 1.5 });
-            TweenLite.to(this.blocks[snapshot.key].scale, explodeDuration, { x: 0.1, y: 0.1, z: 0.1, delay: explodeDuration, onComplete: () => { this.scene.remove(this.blocks[snapshot.key]); this.blocks[snapshot.key] = null }});
+            TweenLite.to(this.blocks[snapshot.key].scale, explodeDuration, { x: 0.1, y: 0.1, z: 0.1, delay: explodeDuration, onComplete: () => { 
+                if(this.scene) {
+                    this.scene.remove(this.blocks[snapshot.key]); 
+                }
+                    this.blocks[snapshot.key] = null 
+            }});
         });
     }
 
