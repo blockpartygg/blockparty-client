@@ -8,7 +8,7 @@ export default class RoundResultsScoreboard extends React.Component {
         scoreboard: []
     }
 
-    componentWillMount() {
+    componentDidMount() {
         firebase.database.ref('players').on('value', snapshot => {
             this.setState({ players: snapshot.val() });
         });
