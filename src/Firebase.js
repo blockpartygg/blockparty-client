@@ -71,7 +71,7 @@ class Firebase {
   signInAsGuest(name, callback, error) {
     this.auth.signInAnonymously().then(() => {
       this.database.ref('players/' + this.uid).onDisconnect().remove();
-      this.database.ref('players/' + this.uid).set({ name: name });
+      this.database.ref('players/' + this.uid).set({ name: name, isGuest: true });
       this.setupPresence();
       callback();
     }).catch(error);
