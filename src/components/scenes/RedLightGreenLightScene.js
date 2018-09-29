@@ -16,7 +16,6 @@ class RedLightGreenLightScene {
         this.setupPlayer();
         this.setupOtherPlayers();
         this.setupGreenLight();
-
         this.sendStateInterval = setInterval(() => { this.sendPlayerState(); }, 1000 / 60);
     }
 
@@ -43,23 +42,23 @@ class RedLightGreenLightScene {
     }
 
     setupGround() {
-        const lineGeometry = new THREE.Geometry();
+        const groundGeometry = new THREE.Geometry();
         for(let x = -500; x <= 500; x += 1) {
-            lineGeometry.vertices.push(
+            groundGeometry.vertices.push(
                 new THREE.Vector3(x, 0, -500),
                 new THREE.Vector3(x, 0, 500)
             );
         }
         for(let z = -500; z <= 500; z += 1) {
-            lineGeometry.vertices.push(
+            groundGeometry.vertices.push(
                 new THREE.Vector3(-500, 0, z),
                 new THREE.Vector3(500, 0, z)
             );
         }
-        const lineMaterial = new THREE.MeshBasicMaterial({ color: "white" });
-        this.lineMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
-        this.lineMesh.position.y = -1;
-        this.scene.add(this.lineMesh);
+        const groundMaterial = new THREE.MeshBasicMaterial({ color: "white" });
+        this.groundMesh = new THREE.LineSegments(groundGeometry, groundMaterial);
+        this.groundMesh.position.y = -1;
+        this.scene.add(this.groundMesh);
     }
 
     setupFont() {
@@ -72,7 +71,7 @@ class RedLightGreenLightScene {
             new THREE.BoxBufferGeometry(),
             new THREE.SphereBufferGeometry(0.5),
             new THREE.ConeBufferGeometry(0.5),
-            new THREE.CylinderBufferGeometry(0.5),
+            new THREE.CylinderBufferGeometry(0.5, 0.5),
             new THREE.DodecahedronBufferGeometry(0.5)
         ];
     }
@@ -101,7 +100,7 @@ class RedLightGreenLightScene {
             }
             let playerName = player.name;
             const textGeometry = new THREE.TextGeometry(playerName, { font: this.font, size: 0.5, height: 0 });
-            const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+            const textMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
             this.textMesh = new THREE.Mesh(textGeometry, textMaterial);
             this.textMesh.position.x = 0;
             this.textMesh.position.y = 1.5;
@@ -114,10 +113,6 @@ class RedLightGreenLightScene {
 
     setupOtherPlayers() {
         this.otherPlayers = [];
-        this.otherPlayers.forEach(player => {
-            player.positionZ = 0;
-            player.mesh.position.z = player.positionZ;
-        });
 
         firebase.database.ref('players').orderByChild('playing').equalTo(true).on('value', snapshot => {
             let x = Math.floor(snapshot.numChildren() / 2) - snapshot.numChildren();
