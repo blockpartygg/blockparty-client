@@ -78,7 +78,7 @@ class WhackABlockScene {
             let block = snapshot.val();
             if(block && block.playerId && this.players[block.playerId]) {
                 let textGeometry = new THREE.TextGeometry(this.players[block.playerId].name, { font: this.font, size: 5, height: 0 });
-                let textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+                let textMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
                 this.nameTexts[snapshot.key] = new THREE.Mesh(textGeometry, textMaterial);
                 this.nameTexts[snapshot.key].position.x = block.position.x;
                 this.nameTexts[snapshot.key].position.y = block.position.y;
