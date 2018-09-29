@@ -38,7 +38,6 @@ export default class Play extends React.Component {
 
     scene = null;
     overlay = null;
-    initializedMinigame = false;
 
     constructor(props) {
         super(props);
@@ -238,33 +237,44 @@ export default class Play extends React.Component {
             case "pregameIntroduction":
             case "roundIntroduction":
             case "roundInstructions":
-                this.scene = this.backgroundScene;
-                break;
-            case "minigameStart":
-                this.scene = this.minigameScene;
-                if(this.scene) {
-                    if(!this.initializedMinigame) {
-                        this.scene.initialize();    
-                        this.initializedMinigame = true;
+                if(this.scene !== this.backgroundScene) {
+                    if(this.scene) {
+                        this.scene.shutdown();
                     }
+                    this.scene = this.backgroundScene;
+                    this.scene.initialize();
                 }
                 break;
+            case "minigameStart":
             case "minigamePlay":
             case "minigameEnd":
-                this.scene = this.minigameScene;
-                this.initializedMinigame = false;
+                if(this.scene !== this.minigameScene) {
+                    if(this.scene) {
+                        this.scene.shutdown();
+                    }
+                    this.scene = this.minigameScene;
+                    this.scene.initialize();
+                }
                 break;
             case "roundResultsScoreboard":
             case "roundResultsLeaderboard":
             case "postgameCelebration":
-                if(this.scene && this.scene.shutdown) {
-                    this.scene.shutdown();
+                if(this.scene && this.scene !== this.backgroundScene) {
+                    if(this.scene) {
+                        this.scene.shutdown();
+                    }
+                    this.scene = this.backgroundScene;
+                    this.scene.initialize();
                 }
-                this.scene = this.backgroundScene;
                 break;
             case "postgameRewards":
-                this.scene = this.postgameRewardsScene;
-                this.scene.initialize();
+                if(this.scene && this.scene !== this.postgameRewardsScene) {
+                    if(this.scene) {
+                        this.scene.shutdown();
+                    }
+                    this.scene = this.postgameRewardsScene;
+                    this.scene.initialize();
+                }
                 break;
             default:
                 break;
