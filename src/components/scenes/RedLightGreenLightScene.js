@@ -10,13 +10,14 @@ class RedLightGreenLightScene {
     initialize() {
         this.setupScene();
         this.setupCamera();
+        this.setupLighting();
         this.setupGround();
         this.setupFont();
         this.setupPlayerGeometry();
         this.setupPlayer();
         this.setupOtherPlayers();
         this.setupGreenLight();
-        this.sendStateInterval = setInterval(() => { this.sendPlayerState(); }, 1000 / 60);
+        this.sendStateInterval = setInterval(this.sendPlayerState, 1000 / 60);
     }
 
     setupScene() {
@@ -24,10 +25,6 @@ class RedLightGreenLightScene {
         this.sceneGreenColor = new THREE.Color(0x00ff00);
         this.sceneRedColor = new THREE.Color(0xff0000);
         this.scene.background = this.sceneGreenColor;
-
-        let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(0, 0, -1).normalize();
-        this.scene.add(directionalLight);
     }
 
     setupCamera() {
@@ -39,6 +36,12 @@ class RedLightGreenLightScene {
         this.camera.zoom = 110;
         this.camera.updateProjectionMatrix();
         this.camera.lookAt(this.scene.position);
+    }
+
+    setupLighting() {
+        let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(0, 0, -1).normalize();
+        this.scene.add(directionalLight);
     }
 
     setupGround() {
@@ -194,7 +197,7 @@ class RedLightGreenLightScene {
         });
     }
 
-    sendPlayerState() {
+    sendPlayerState = () => {
         if(firebase.isAuthed) {
             firebase.database.ref('minigame/redLightGreenLight/players/' + firebase.uid).set(this.player);
         }
