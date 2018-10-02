@@ -21,7 +21,7 @@ import PostgameRewardsWithRouter from '../states/PostgameRewards';
 
 import BackgroundScene from '../scenes/BackgroundScene';
 import RedLightGreenLightScene from '../scenes/RedLightGreenLightScene';
-import WhackABlockScene from '../scenes/WhackABlockScene';
+import BlockBlasterScene from '../scenes/BlockBlasterScene';
 import BlockioScene from '../scenes/BlockioScene';
 import PostgameRewardsScene from '../scenes/PostgameRewardsScene';
 
@@ -196,7 +196,7 @@ export default class Play extends React.Component {
         this.backgroundScene = new BackgroundScene(this.renderer);
         this.postgameRewardsScene = new PostgameRewardsScene(this.renderer);
         this.redLightGreenLightScene = new RedLightGreenLightScene(this.renderer, this.state);
-        this.whackABlockScene = new WhackABlockScene(this.renderer);
+        this.blockBlasterScene = new BlockBlasterScene(this.renderer);
         this.blockioScene = new BlockioScene(this.renderer);
     }
 
@@ -220,7 +220,7 @@ export default class Play extends React.Component {
                     this.minigameScene = this.redLightGreenLightScene;
                     break;
                 case "Block Blaster":
-                    this.minigameScene = this.whackABlockScene;
+                    this.minigameScene = this.blockBlasterScene;
                     break;
                 case "Block.io":
                     this.minigameScene = this.blockioScene;
