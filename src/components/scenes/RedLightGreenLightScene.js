@@ -1,5 +1,6 @@
 import THREE from '../../THREE';
 import firebase from '../../Firebase';
+import socketIO from '../../SocketIO';
 import { TweenLite } from 'gsap';
 
 class RedLightGreenLightScene {
@@ -149,7 +150,7 @@ class RedLightGreenLightScene {
                     this.otherPlayers[playerSnapshot.key].group.add(this.otherPlayers[playerSnapshot.key].mesh);
 
                     const textGeometry = new THREE.TextGeometry(this.otherPlayers[playerSnapshot.key].name, { font: this.font, size: 0.5, height: 0 });
-                    const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+                    const textMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
                     this.otherPlayers[playerSnapshot.key].text = new THREE.Mesh(textGeometry, textMaterial);
                     this.otherPlayers[playerSnapshot.key].text.position.x = 0;
                     this.otherPlayers[playerSnapshot.key].text.position.y = 1.5;
@@ -161,45 +162,40 @@ class RedLightGreenLightScene {
             });
         });
 
-        firebase.database.ref('minigame/redLightGreenLight/players').on('value', snapshot => {
-            snapshot.forEach(player => {
-                if(player.key === firebase.uid) {
-                    return;
-                }
-                if(player.val()) {
-                    if(!this.otherPlayers[player.key]) {
-                        this.otherPlayers[player.key] = {};
-                    }
-                    this.otherPlayers[player.key].initialPositionZ = this.otherPlayers[player.key].positionZ;
-                    this.otherPlayers[player.key].targetPositionZ = player.val().positionZ;
-                    if(!this.otherPlayers[player.key].moving && this.otherPlayers[player.key].initialPositionZ !== this.otherPlayers[player.key].targetPositionZ) {
-                        this.otherPlayers[player.key].moving = true;
-                        let deltaPositionZ = this.otherPlayers[player.key].targetPositionZ - this.otherPlayers[player.key].initialPositionZ;
-                        let moveDuration = 0.1;
-                        TweenLite.to(this.otherPlayers[player.key].group.position, moveDuration, { y: 1, z: this.otherPlayers[player.key].initialPositionZ + deltaPositionZ * 0.75 });
-                        TweenLite.to(this.otherPlayers[player.key].group.scale, moveDuration, { y: 1.2, z: 1 });
-                        TweenLite.to(this.otherPlayers[player.key].group.scale, moveDuration, { y: 0.8, z: 1, delay: moveDuration });
-                        TweenLite.to(this.otherPlayers[player.key].group.scale, moveDuration, { y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
-                        TweenLite.to(this.otherPlayers[player.key].group.position, moveDuration, { y: 0, z: this.otherPlayers[player.key].targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: () => { this.otherPlayers[player.key].positionZ = player.val().positionZ; this.otherPlayers[player.key].moving = false; } });
-                        this.otherPlayers[player.key].initialPositionZ = this.otherPlayers[player.key].targetPositionZ;
-                    }
-                }
-            });
+        socketIO.socket.on('minigames/redLightGreenLight/player', (playerId, player) => {
+            if(playerId === firebase.uid) {
+                return;
+            }
+            if(!this.otherPlayers[playerId]) {
+                this.otherPlayers[playerId] = {};
+            }
+            this.otherPlayers[playerId].initialPositionZ = this.otherPlayers[playerId].positionZ;
+            this.otherPlayers[playerId].targetPositionZ = player.positionZ;
+            if(!this.otherPlayers[playerId].moving && this.otherPlayers[playerId].initialPositionZ !== this.otherPlayers[playerId].targetPositionZ) {
+                this.otherPlayers[playerId].moving = true;
+                let deltaPositionZ = this.otherPlayers[playerId].targetPositionZ - this.otherPlayers[playerId].initialPositionZ;
+                let moveDuration = 0.1;
+                TweenLite.to(this.otherPlayers[playerId].group.position, moveDuration, { y: 1, z: this.otherPlayers[playerId].initialPositionZ + deltaPositionZ * 0.75 });
+                TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 1.2, z: 1 });
+                TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 0.8, z: 1, delay: moveDuration });
+                TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
+                TweenLite.to(this.otherPlayers[playerId].group.position, moveDuration, { y: 0, z: this.otherPlayers[playerId].targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: () => { this.otherPlayers[playerId].positionZ = player.positionZ; this.otherPlayers[playerId].moving = false; } });
+                this.otherPlayers[playerId].initialPositionZ = this.otherPlayers[playerId].targetPositionZ;
+            }
         });
     }
 
     setupGreenLight() {
         this.greenLight = true;
 
-        firebase.database.ref('minigame/redLightGreenLight/greenLight').on('value', snapshot => {
-            let greenLight = snapshot.val();
+        socketIO.socket.on('minigames/redLightGreenLight/greenLight', greenLight => {
             this.greenLight = greenLight;
         });
     }
 
     sendPlayerState = () => {
         if(firebase.isAuthed) {
-            firebase.database.ref('minigame/redLightGreenLight/players/' + firebase.uid).set(this.player);
+            socketIO.socket.emit('minigames/redLightGreenLight/player', firebase.uid, this.player);
         }
     }
 
@@ -260,8 +256,6 @@ class RedLightGreenLightScene {
     shutdown() {
         firebase.database.ref('players/' + firebase.uid).off();
         firebase.database.ref('players').off();
-        firebase.database.ref('minigame/redLightGreenLight/players').off();
-        firebase.database.ref('minigame/redLightGreenLight/greenLight').off();
 
         clearInterval(this.sendStateInterval);
 
