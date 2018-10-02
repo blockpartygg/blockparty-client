@@ -37,6 +37,7 @@ export default class Title extends React.Component {
     handlePlay = () => {
         if(firebase.isAuthed) {
             this.playDestination = 'home';
+            firebase.setupSocket();
             firebase.setupPresence();
         }
         

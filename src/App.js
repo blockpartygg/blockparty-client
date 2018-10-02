@@ -2,6 +2,7 @@ import React from "react";
 import { StatusBar } from "react-native";
 import { AppLoading, Asset } from 'expo';
 import firebase from './Firebase';
+import socketIO from './SocketIO';
 import { Router, Switch, Route } from './Routing';
 import THREE from './THREE';
 import Title from './components/screens/Title';
@@ -18,6 +19,7 @@ export default class App extends React.Component {
 
     componentWillMount() {
         firebase.initialize();
+        socketIO.initialize();
         THREE.suppressExpoWarnings();
     }
 

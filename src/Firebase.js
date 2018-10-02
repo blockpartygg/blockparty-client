@@ -1,5 +1,6 @@
 import firebase from 'firebase';
 import { AsyncStorage } from 'react-native';
+import socketIO from './SocketIO';
 
 class Firebase {
   constructor() {}
@@ -61,6 +62,7 @@ class Firebase {
   signIn(email, password, callback, error) {
     this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
       this.auth.signInWithEmailAndPassword(email, password).then(() => {
+        this.setupSocket();
         this.setupPresence();
         this.setPlayerAccountCreated();
         callback();
@@ -72,6 +74,7 @@ class Firebase {
     this.auth.signInAnonymously().then(() => {
       this.database.ref('players/' + this.uid).onDisconnect().remove();
       this.database.ref('players/' + this.uid).set({ name: name, isGuest: true });
+      this.setupSocket();
       this.setupPresence();
       callback();
     }).catch(error);
@@ -81,6 +84,7 @@ class Firebase {
     this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
       this.auth.createUserWithEmailAndPassword(email, password).then(() => {
         this.database.ref('players/' + this.uid).set({ name: name, currency: 0 });
+        this.setupSocket();
         this.setupPresence();
         this.setPlayerAccountCreated();
         callback();
@@ -90,6 +94,12 @@ class Firebase {
 
   signOut(callback) {
     this.auth.signOut().then(callback);
+  }
+
+  setupSocket() {
+    if(this.isAuthed) {
+      this.database.ref('players/' + this.uid + '/socketId').set(socketIO.socket.id);
+    }
   }
 
   setupPresence() {
