@@ -3,7 +3,7 @@ import { View, Button, Text, StyleSheet } from 'react-native';
 
 export default class Web extends React.Component {
     onPressBack = () => {
-        this.props.history.goBack();
+        this.props.navigation.goBack();
     }
 
     render() {

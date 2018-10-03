@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Button } from 'react-native';
+import { View } from 'react-native';
 import ExpoTHREE from 'expo-three';
 import { View as GraphicsView } from 'expo-graphics';
 import { FontAwesome } from '@expo/vector-icons';
@@ -26,6 +26,10 @@ import BlockioScene from '../scenes/BlockioScene';
 import PostgameRewardsScene from '../scenes/PostgameRewardsScene';
 
 export default class Play extends React.Component {
+    static navigationOptions = {
+        header: null
+    }
+
     state = {
         name: null,
         bits: null,
@@ -39,30 +43,28 @@ export default class Play extends React.Component {
     scene = null;
     overlay = null;
 
-    constructor(props) {
-        super(props);
-        this.startPurchase = this.startPurchase.bind(this);
-    }
-
     componentWillMount() {
-        firebase.auth.onAuthStateChanged(user => {
+        this.unsubscribeAuthStateChanged = firebase.auth.onAuthStateChanged(user => {
             if(!user) {
-                this.props.history.replace('/');
+                firebase.signOut(() => {
+                    this.props.navigation.navigate('Title');
+                });
             } else {
                 firebase.database.ref('players/' + user.uid).once('value', snapshot => {
                     let player = snapshot.val();
                     if(!player) {
-                        this.props.history.replace('/');
+                        firebase.signOut(() => {
+                            this.props.navigation.navigate('Title');
+                        });
                     }
                     else {
                         if(!player.name) {
-                            this.props.history.replace('/');
+                            firebase.signOut(() => {
+                                this.props.navigation.navigate('Title');
+                            });
                         }
                         else {
                             this.setState({ name: player.name });
-                            if(this.redLightGreenLightScene) {
-                                this.redLightGreenLightScene.playerName = player.name;
-                            }
                         }
                     }
                 });
@@ -107,7 +109,7 @@ export default class Play extends React.Component {
         });
     }
 
-    startPurchase() {
+    startPurchase = () => {
         if(this.state.bits >= 100) {
             firebase.database.ref('players/' + firebase.uid + '/currency').set(this.state.bits - 100);
             let skinId = Math.floor(Math.random() * 5);
@@ -118,7 +120,7 @@ export default class Play extends React.Component {
 
     onPressBack = () => { 
         firebase.database.ref('players/' + firebase.uid).update({ playing: false });
-        this.props.history.goBack(); 
+        this.props.navigation.goBack(); 
     }
 
     render() {
@@ -304,6 +306,7 @@ export default class Play extends React.Component {
     }
 
     componentWillUnmount() {
+        this.unsubscribeAuthStateChanged();
         firebase.database.ref('game/state').off();
         firebase.database.ref('game/endTime').off();
         firebase.database.ref('game/round').off();

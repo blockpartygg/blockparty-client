@@ -1,9 +1,21 @@
 import React from 'react';
-import { View, KeyboardAvoidingView, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import firebase from '../../Firebase';
 
 export default class SignUp extends React.Component {
+    static navigationOptions = ({ navigation }) => {
+        return {
+            header: (
+                <View style={styles.header}>
+                    <FontAwesome.Button onPress={() => { navigation.goBack(); }} name="chevron-left" color="white" backgroundColor="transparent" style={styles.headerBackButton} />
+                    <Text style={styles.headerText}>SIGN UP</Text>
+                    <View style={styles.headerHorizontalBar} />
+                </View>
+            )
+        }
+    }
+
     state = {
         name: '',
         email: '',
@@ -13,9 +25,13 @@ export default class SignUp extends React.Component {
         error: ''
     }
 
+    onPressBack = () => {
+        this.props.navigation.goBack();
+    }
+
     handleSignUp = (event) => {
         firebase.signUp(this.state.email, this.state.password, this.state.name, () => {
-            this.props.history.push('/home');
+            this.props.navigation.navigate('Home');
         }, error => {
             this.setState({ error: error });
         });
@@ -24,19 +40,15 @@ export default class SignUp extends React.Component {
 
     handlePlayAsGuest = (event) => {
         firebase.signInAsGuest(this.state.guestName, () => {
-            this.props.history.push('/home');
+            this.props.navigation.navigate('Home');
         }, error => {
             this.setState({ error: error });
         });
         event.preventDefault();
     }
 
-    onPressBack = () => {
-        this.props.history.goBack();
-    }
-
     onPressSignIn = () => {
-        this.props.history.push('signIn');
+        this.props.navigation.navigate('SignIn');
     }
 
     render() {
@@ -49,12 +61,7 @@ export default class SignUp extends React.Component {
 
         return(
             <View style={styles.container}>
-                <KeyboardAvoidingView behavior="padding" enabled style={{ flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center", backgroundColor: "transparent" }}>
-                    <View style={styles.header}>
-                        <FontAwesome.Button onPress={this.onPressBack} name="chevron-left" color="white" backgroundColor="transparent" style={styles.headerBackButton} />
-                        <Text style={styles.headerText}>SIGN UP</Text>
-                        <View style={styles.headerHorizontalBar} />
-                    </View>
+                <View behavior="padding" enabled style={{ flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center", backgroundColor: "transparent" }}>
                     <View style={styles.form}>
                         <Text style={styles.instructionsText}>Welcome to the Party!</Text>
                         <Text style={styles.instructionsText}>Let's get started.</Text>
@@ -72,7 +79,7 @@ export default class SignUp extends React.Component {
                         <Text style={styles.signInLabel}>Have an account already?</Text>
                         <Text onPress={this.onPressSignIn} style={styles.signInLink}>Sign in!</Text>
                     </View>
-                </KeyboardAvoidingView>
+                </View>
             </View>
         )
     }
