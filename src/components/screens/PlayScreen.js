@@ -101,6 +101,22 @@ export default class Play extends React.Component {
                 this.setState({ mode: mode });
             }
         });
+        firebase.database.ref('game/teams/redTeamId').orderByValue().equalTo(firebase.uid).on('value', snapshot => {
+            if(snapshot.val()) {
+                this.setState({ team: "red" });
+            }
+        });
+        firebase.database.ref('game/teams/blueTeamId').orderByValue().equalTo(firebase.uid).on('value', snapshot => {
+            if(snapshot.val()) {
+                this.setState({ team: "blue" });
+            }
+        });
+        firebase.database.ref('players').on('value', snapshot => {
+            let players = snapshot.val();
+            if(players) {
+                this.setState({ players: players });
+            }
+        });
         firebase.database.ref('players/' + firebase.uid + '/currency').on('value', snapshot => {
             let bits = snapshot.val();
             if(bits) {
@@ -159,7 +175,7 @@ export default class Play extends React.Component {
                 overlay = <RoundIntroduction round={this.state.round} minigame={this.state.minigame} mode={this.state.mode} />
                 break;
             case "roundInstructions":
-                overlay = <RoundInstructions round={this.state.round} minigame={this.state.minigame} mode={this.state.mode} />
+                overlay = <RoundInstructions round={this.state.round} minigame={this.state.minigame} mode={this.state.mode} team={this.state.team} />
                 break;
             case "minigameStart":
                 overlay = <MinigameStart />
@@ -171,10 +187,10 @@ export default class Play extends React.Component {
                 overlay = <MinigameEnd />
                 break;
             case "roundResultsScoreboard":
-                overlay = <RoundResultsScoreboard round={this.state.round} />
+                overlay = <RoundResultsScoreboard players={this.state.players} round={this.state.round} />
                 break;
             case "roundResultsLeaderboard":
-                overlay = <RoundResultsLeaderboard round={this.state.round} />
+                overlay = <RoundResultsLeaderboard players={this.state.players} round={this.state.round} />
                 break;
             case "postgameCelebration":
                 overlay = <PostgameCelebration />
@@ -183,7 +199,7 @@ export default class Play extends React.Component {
                 overlay = <PostgameRewardsWithRouter name={this.state.name} bits={this.state.bits} startPurchase={this.startPurchase} />
                 break;
             default:
-                console.log(`invalid game state: ${this.state.state}`);
+                overlay = null;
                 break;
         }
         return overlay;

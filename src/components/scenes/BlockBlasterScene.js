@@ -49,6 +49,34 @@ class BlockBlasterScene {
     setupBlockListeners() {
         this.blocks = [];
         this.blockGeometry = new THREE.BoxBufferGeometry();
+        this.setupCurrentBlocks();
+        this.setupBlockAddedListener();
+        this.setupBlockRemovedListener();
+    }
+
+    setupCurrentBlocks() {
+        socketIO.socket.on('minigames/blockBlaster/blocks', blocks => {
+            const blockIds = Object.keys(blocks);
+            blockIds.forEach(blockId => {
+                const block = blocks[blockId];
+                this.blocks[blockId] = new THREE.Mesh(this.blockGeometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
+                this.blocks[blockId].position.x = block.position.x;
+                this.blocks[blockId].position.y = block.position.y;
+                this.blocks[blockId].position.z = block.position.z;
+                this.blocks[blockId].scale.x = block.scale.x;
+                this.blocks[blockId].scale.y = block.scale.y;
+                this.blocks[blockId].scale.z = block.scale.z;
+                this.blocks[blockId].rotation.x = block.rotation.x;
+                this.blocks[blockId].rotation.y = block.rotation.y;
+                this.blocks[blockId].rotation.z = block.rotation.z;
+                this.blocks[blockId].name = blockId;
+                this.scene.add(this.blocks[blockId]);
+            });
+        });
+        socketIO.socket.emit('minigames/blockBlaster/blocks_get');
+    }
+
+    setupBlockAddedListener() {
         socketIO.socket.on('minigames/blockBlaster/block_added', (blockId, block) => {
             this.blocks[blockId] = new THREE.Mesh(this.blockGeometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
             this.blocks[blockId].position.x = block.position.x;
@@ -66,31 +94,14 @@ class BlockBlasterScene {
             TweenLite.to(this.blocks[blockId].scale, expandDuration, { x: block.scale.x, y: block.scale.y, z: block.scale.z, delay: expandDuration });
             this.scene.add(this.blocks[blockId]);
         });
-        this.fontLoader = new THREE.FontLoader();
-        this.font = this.fontLoader.parse(require('../../assets/fonts/helvetiker_regular.typeface.json'));
-        this.nameTexts = [];
+    }
+
+    setupBlockRemovedListener() {
         socketIO.socket.on('minigames/blockBlaster/block_removed', (blockId, block) => {
-            if(block && block.playerId && this.players[block.playerId]) {
-                let textGeometry = new THREE.TextGeometry(this.players[block.playerId].name, { font: this.font, size: 5, height: 0 });
-                let textMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-                this.nameTexts[blockId] = new THREE.Mesh(textGeometry, textMaterial);
-                this.nameTexts[blockId].position.x = block.position.x;
-                this.nameTexts[blockId].position.y = block.position.y;
-                this.nameTexts[blockId].position.z = block.position.z;
-                this.nameTexts[blockId].material.transparent = true;
-                this.nameTexts[blockId].material.opacity = 1;
-                this.scene.add(this.nameTexts[blockId]);
-                let fadeDuration = 2;
-                TweenLite.to(this.nameTexts[blockId].material, fadeDuration, { opacity: 0, onComplete: () => {
-                    if(this.scene) {
-                        this.scene.remove(this.nameTexts[blockId]);
-                    }
-                    this.nameTexts[blockId] = null; 
-                }});
-            }
             let explodeDuration = 0.5;
             if(this.blocks[blockId]) {
-                TweenLite.to(this.blocks[blockId].scale, explodeDuration, { x: 1.5, y: 1.5, z: 1.5 });
+                TweenLite.to(this.blocks[blockId].material, explodeDuration, { opacity: 0 });
+                TweenLite.to(this.blocks[blockId].scale, explodeDuration, { x: block.scale.x * 1.5, y: block.scale.y * 1.5, z: block.scale.z * 1.5 });
                 TweenLite.to(this.blocks[blockId].scale, explodeDuration, { x: 0.1, y: 0.1, z: 0.1, delay: explodeDuration, onComplete: () => { 
                     if(this.scene) {
                         this.scene.remove(this.blocks[blockId]); 
@@ -166,6 +177,9 @@ class BlockBlasterScene {
 
     cleanupListeners() {
         firebase.database.ref('players').off();
+        socketIO.socket.off('minigames/blockBlaster/blocks');
+        socketIO.socket.off('minigames/blockBlaster/block_added');
+        socketIO.socket.off('minigames/blockBlaster/block_removed');
     }
 }
 

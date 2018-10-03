@@ -8,17 +8,6 @@ export default class RoundInstructions extends React.Component {
     }
 
     componentDidMount() {
-        firebase.database.ref('game/teams/redTeamId').orderByValue().equalTo(firebase.uid).once('value', snapshot => {
-            if(snapshot.val()) {
-                this.setState({ team: "Red" });
-            }
-        });
-        firebase.database.ref('game/teams/blueTeamId').orderByValue().equalTo(firebase.uid).once('value', snapshot => {
-            if(snapshot.val()) {
-                this.setState({ team: "Blue" });
-            }
-        });
-
         Animated.timing(this.state.scaleAnimation, { toValue: 1, duration: 1000 }).start();
     }
 
@@ -30,7 +19,7 @@ export default class RoundInstructions extends React.Component {
                 <Text style={{ fontSize: 24, textAlign: "center", color: "white" }}>{this.props.minigame && this.props.minigame.instructions}{'\n'}</Text>
                 <Text style={{ fontSize: 48, textAlign: "center", color: "white" }}>{this.props.mode && this.props.mode.name}</Text>
                 <Text style={{ fontSize: 24, textAlign: "center", color: "white" }}>{this.props.mode && this.props.mode.instructions}</Text>
-                <Text style={{ fontSize: 24, textAlign: "center", color: "white" }}>{this.state.team && "You're on the "}<Text style={{ color: this.state.team === "Red" ? "red" : "blue" }}>{this.state.team}</Text> team</Text>
+                <Text style={{ fontSize: 24, textAlign: "center", color: "white" }}>{this.props.team && "You're on the "}<Text style={{ color: this.props.team }}>{this.props.team}</Text> team</Text>
             </Animated.View>
         )
     }
