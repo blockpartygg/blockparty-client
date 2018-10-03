@@ -3,14 +3,8 @@ import { StatusBar } from "react-native";
 import { AppLoading, Asset } from 'expo';
 import firebase from './Firebase';
 import socketIO from './SocketIO';
-import { Router, Switch, Route } from './Routing';
 import THREE from './THREE';
-import Title from './components/screens/Title';
-import Home from './components/screens/Home';
-import Play from './components/screens/Play';
-import SignIn from './components/screens/SignIn';
-import SignUp from './components/screens/SignUp';
-import Web from './components/screens/Web';
+import RootStack from './Navigation';
 
 export default class App extends React.Component {
     state = {
@@ -49,18 +43,7 @@ export default class App extends React.Component {
 
     render() {
         let loadingScreen = <AppLoading startAsync={this.loadAssetsAsync} onFinish={() => this.setState({ loading: false })} />
-        let appScreen = (
-            <Router>
-                    <Switch hideNavBar={true}>
-                        <Route exact path="/" component={Title} />
-                        <Route path="/home" component={Home} />
-                        <Route path="/play" component={Play} />
-                        <Route path="/signIn" component={SignIn} />
-                        <Route path="/signUp" component={SignUp} />
-                        <Route path="/web" component={Web} />
-                    </Switch>
-            </Router>
-        );
+        let appScreen = <RootStack />
 
         return this.state.loading ? loadingScreen : appScreen;
     }
