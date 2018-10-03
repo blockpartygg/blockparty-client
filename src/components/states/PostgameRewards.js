@@ -3,7 +3,6 @@ import { View , Text, Button, StyleSheet } from 'react-native';
 import { AdMobRewarded } from 'expo';
 import { TweenLite } from 'gsap';
 import firebase from '../../Firebase';
-import { withRouter } from '../../Routing';
 
 class PostgameRewards extends React.Component {
     state = {
@@ -21,14 +20,7 @@ class PostgameRewards extends React.Component {
         value: 100
     }
 
-    constructor(props) {
-        super(props);
-        this.onPressPurchasePrize = this.onPressPurchasePrize.bind(this);
-        this.onPressWatchAd = this.onPressWatchAd.bind(this);
-        this.update = this.update.bind(this);
-    }
-
-    componentWillMount() {
+    componentDidMount() {
         firebase.database.ref('players/' + firebase.uid).on('value', snapshot => {
             let player = snapshot.val();
             if(player) {
@@ -49,7 +41,9 @@ class PostgameRewards extends React.Component {
         AdMobRewarded.addEventListener('rewardedVideoDidRewardUser', this.onRewardedVideoDidRewardUser);
         AdMobRewarded.addEventListener('rewardedVideoDidClose', this.onRewardedVideoDidClose);
         this.requestAdAsync();
-    }
+        
+        this.raf = requestAnimationFrame(this.update);
+    }    
 
     onRewardedVideoDidRewardUser = reward => {
         this.setState({ didWatchAd: true });
@@ -73,24 +67,20 @@ class PostgameRewards extends React.Component {
         await AdMobRewarded.requestAdAsync();
     }
 
-    componentDidMount() {
-        this.raf = requestAnimationFrame(this.update);
-    }    
-
-    update() {
+    update = () => {
         this.raf = requestAnimationFrame(this.update);
         this.setState({ currency: Math.round(this.currency.value) });
         this.setState({ currencyGain: Math.round(this.currencyGain.value) });
     }
 
-    onPressPurchasePrize() {
+    onPressPurchasePrize = () => {
         this.setState({ isPurchaseDisabled: true });
         this.currency.value = this.state.currency;
         TweenLite.to(this.currency, 3, { value: this.state.currency - 100 });
         this.props.startPurchase();
     }
 
-    onPressWatchAd() {
+    onPressWatchAd = () => {
         this.showAdAsync();
     }
 
@@ -206,6 +196,4 @@ const styles = StyleSheet.create({
     }
 });
 
-const PostgameRewardsWithRouter = withRouter(PostgameRewards);
-
-export default PostgameRewardsWithRouter;
+export default PostgameRewards;
