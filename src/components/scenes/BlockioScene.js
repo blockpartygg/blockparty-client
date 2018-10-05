@@ -1,6 +1,7 @@
 import { Dimensions } from 'react-native';
 import THREE from '../../THREE';
 import firebase from '../../Firebase';
+import socketIO from '../../SocketIO';
 
 class BlockioScene {
     constructor(renderer) {
@@ -17,7 +18,7 @@ class BlockioScene {
         this.setupFont();
         this.setupAvatarGeometry();
         this.setupPlayer();
-        this.setupOtherPlayers();
+        // this.setupOtherPlayers();
         this.setupFood();
         this.sendStateInterval = setInterval(this.sendPlayerState, 1000 / 60);
     }
@@ -60,7 +61,6 @@ class BlockioScene {
         }
         const groundMaterial = new THREE.MeshBasicMaterial({ color: "black" });
         this.groundMesh = new THREE.LineSegments(groundGeometry, groundMaterial);
-        this.groundMesh.position.z = -1;
         this.scene.add(this.groundMesh);
     }
 
@@ -160,43 +160,61 @@ class BlockioScene {
             });
         });
 
-        firebase.database.ref('minigame/blockio/players').on('value', snapshot => {
-            snapshot.forEach(player => {
-                if(player.key === firebase.uid) {
-                    return;
-                }
-                if(player.val()) {
-                    if(!this.otherPlayers[player.key]) {
-                        this.otherPlayers[player.key] = {};
-                    }
-                    this.otherPlayers[player.key].positionX = player.val().positionX;
-                    this.otherPlayers[player.key].positionY = player.val().positionY;
-                    this.otherPlayers[player.key].group.position.x = this.otherPlayers[player.key].positionX;
-                    this.otherPlayers[player.key].group.position.y = this.otherPlayers[player.key].positionY;
-                }
-            });
+        socketIO.socket.on('minigames/blockio/setPlayer', (playerId, player) => {
+            if(playerId === firebase.uid) {
+                return;
+            }
+            if(!this.otherPlayers[playerId]) {
+                this.otherPlayers[playerId] = {};
+            }
+            this.otherPlayers[playerId].positionX = player.positionX;
+            this.otherPlayers[playerId].positionY = player.positionY;
+            if(this.otherPlayers[playerId].group) {
+                this.otherPlayers[playerId].group.position.x = this.otherPlayers[playerId].positionX;
+                this.otherPlayers[playerId].group.position.y = this.otherPlayers[playerId].positionY;
+            }
         });
     }
 
     setupFood() {
         this.food = [];
         this.foodGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-        firebase.database.ref('minigame/blockio/food').on('child_added', snapshot => {
-            let food = snapshot.val();
-            this.food[snapshot.key] = new THREE.Mesh(this.foodGeometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
-            this.food[snapshot.key].position.x = food.position.x;
-            this.food[snapshot.key].position.y = food.position.y;
-            this.food[snapshot.key].name = snapshot.key;
-            this.scene.add(this.food[snapshot.key]);
+
+        socketIO.socket.emit('minigames/blockio/getFood', food => {
+            console.log('got food');
+            console.log(food);
+            const foodIds = Object.keys(food);
+            foodIds.forEach(foodId => {
+                const newFood = food[foodId];
+                this.food[foodId] = new THREE.Mesh(this.foodGeometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
+                this.food[foodId].active = newFood.active;
+                this.food[foodId].position.x = newFood.position.x;
+                this.food[foodId].position.y = newFood.position.y;
+                this.food[foodId].name = foodId;
+                this.scene.add(this.food[foodId]);
+            });
         });
-        firebase.database.ref('minigame/blockio/food').on('child_removed', snapshot => {
-            this.scene.remove(this.food[snapshot.key]);
+
+        socketIO.socket.on('minigames/blockio/addFood', (foodId, food) => {
+            console.log('adding food ' + foodId);
+            this.food[foodId] = new THREE.Mesh(this.foodGeometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
+            this.food[foodId].active = food.active;
+            this.food[foodId].position.x = food.position.x;
+            this.food[foodId].position.y = food.position.y;
+            this.food[foodId].name = foodId;
+            this.scene.add(this.food[foodId]);
+        });
+        
+        socketIO.socket.on('minigames/blockio/removeFood', (foodId) => {
+            console.log('removing food ' + foodId);
+            this.scene.remove(this.food[foodId]);
+            this.food[foodId] = null;
         });
     }
 
     sendPlayerState = () => {
         if(firebase.isAuthed) {
-            firebase.database.ref('minigame/blockio/players/' + firebase.uid).set(this.player);
+            socketIO.socket.emit('minigames/blockio/setPlayer', firebase.uid, this.player);
         }
     }
 
@@ -245,19 +263,20 @@ class BlockioScene {
             this.player.positionY = 5;
         }
 
-        for(var key in this.food) {
-            let food = this.food[key];
-            let deltaX = this.player.positionX - food.position.x;
-            let deltaY = this.player.positionY - food.position.y;
-            let distance = deltaX * deltaX + deltaY * deltaY;
-            if(distance < 1) {
-                let foodId = food.name;
-                firebase.database.ref('game/commands').push({
-                    playerId: firebase.uid,
-                    foodId: foodId
-                });
+        const foodIds = Object.keys(this.food);
+        foodIds.forEach(foodId => {
+            const food = this.food[foodId];
+            if(food) {
+                let deltaX = this.player.positionX - food.position.x;
+                let deltaY = this.player.positionY - food.position.y;
+                let distance = deltaX * deltaX + deltaY * deltaY;
+                if(distance < 1 && food.active) {
+                    console.log('eating food');
+                    this.food[foodId].active = false;
+                    socketIO.socket.emit('minigames/blockio/eatFood', foodId, firebase.uid);
+                }
             }
-        }
+        });
 
         if(this.playerGroup) {
             this.playerGroup.position.x = this.player.positionX;
@@ -274,8 +293,8 @@ class BlockioScene {
     }
 
     shutdown() {
-        firebase.database.ref('minigame/blockio/players').off();
-        firebase.database.ref('minigame/blockio/food').off();
+        // firebase.database.ref('minigame/blockio/players').off();
+        // firebase.database.ref('minigame/blockio/food').off();
 
         clearInterval(this.sendStateInterval);
 
