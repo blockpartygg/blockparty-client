@@ -5,6 +5,7 @@ import firebase from './Firebase';
 import socketIO from './SocketIO';
 import THREE from './THREE';
 import RootStack from './Navigation';
+import analytics from "./Analytics";
 
 export default class App extends React.Component {
     state = {
@@ -14,6 +15,7 @@ export default class App extends React.Component {
     componentWillMount() {
         firebase.initialize();
         socketIO.initialize();
+        analytics.initialize();
         THREE.suppressExpoWarnings();
     }
 

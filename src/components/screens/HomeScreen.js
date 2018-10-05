@@ -2,6 +2,7 @@ import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { GiftedChat } from 'react-native-gifted-chat';
 import firebase from '../../Firebase';
+import analytics from '../../Analytics';
 
 export default class Home extends React.Component {
     static navigationOptions = {
@@ -96,6 +97,10 @@ export default class Home extends React.Component {
             }));
         });
         this.updateTimerId = setInterval(this.update, 1000);
+
+        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
+            analytics.sendScreenView('Home');
+        });
     }
 
     update = () => {
@@ -211,6 +216,8 @@ export default class Home extends React.Component {
         firebase.database.ref('messages').off();
 
         clearInterval(this.updateTimerId);
+        
+        this.didFocusListener.remove();
     }
 }
 

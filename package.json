@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "expo": "^29.0.0",
+    "expo-analytics": "^1.0.7",
     "expo-graphics": "^1.0.0-alpha.5",
     "expo-three": "^3.0.0-alpha.2",
     "firebase": "^5.1.0",

@@ -1,6 +1,7 @@
 import React from 'react';
 import { AsyncStorage, View, Image, Text, TouchableOpacity, Animated } from 'react-native';
 import firebase from '../../Firebase';
+import analytics from '../../Analytics';
 import blockPartyLogo from '../../assets/images/BlockPartyLogoSquare.png';
 
 export default class Title extends React.Component {
@@ -22,6 +23,9 @@ export default class Title extends React.Component {
                 Animated.timing(this.state.playButtonOpacityAnimation, { toValue: 1, duration: 500 }),
             ])
         ]).start();
+        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
+            analytics.sendScreenView('Title');
+        });
     }
 
     handlePlay = () => {
@@ -76,5 +80,9 @@ export default class Title extends React.Component {
                 </View>
             </View>
         )
+    }
+
+    componentWillUnmount() {
+        this.didFocusListener.remove();
     }
 }

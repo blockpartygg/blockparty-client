@@ -5,6 +5,7 @@ import { View as GraphicsView } from 'expo-graphics';
 import { FontAwesome } from '@expo/vector-icons';
 import firebase from '../../Firebase';
 import TouchableView from '../TouchableView';
+import analytics from '../../Analytics';
 
 import PregameCountdown from '../states/PregameCountdown';
 import PregameTitle from '../states/PregameTitle';
@@ -43,7 +44,7 @@ export default class Play extends React.Component {
     scene = null;
     overlay = null;
 
-    componentWillMount() {
+    componentDidMount() {
         this.unsubscribeAuthStateChanged = firebase.auth.onAuthStateChanged(user => {
             if(!user) {
                 firebase.signOut(() => {
@@ -122,6 +123,10 @@ export default class Play extends React.Component {
             if(bits) {
                 this.setState({ bits: bits });
             }
+        });
+
+        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
+            analytics.sendScreenView('Play');
         });
     }
 
@@ -328,5 +333,7 @@ export default class Play extends React.Component {
         firebase.database.ref('game/round').off();
         firebase.database.ref('game/minigame').off();
         firebase.database.ref('game/mode').off();
+
+        this.didFocusListener.remove();
     }
 }

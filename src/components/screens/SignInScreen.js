@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import firebase from '../../Firebase';
+import analytics from '../../Analytics';
 
 export default class SignIn extends React.Component {
     static navigationOptions = ({ navigation }) => {
@@ -22,6 +23,12 @@ export default class SignIn extends React.Component {
         signInError: '',
         name: '',
         playAsGuestError: '',
+    }
+
+    componentDidMount() {
+        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
+            analytics.sendScreenView('SignIn');
+        });
     }
 
     onPressBack = () => {
@@ -80,6 +87,10 @@ export default class SignIn extends React.Component {
                 </View>
             </View>
         )
+    }
+
+    componentWillUnmount() {
+        this.didFocusListener.remove();
     }
 }
 

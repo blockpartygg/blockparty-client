@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import firebase from '../../Firebase';
+import analytics from '../../Analytics';
 
 export default class SignUp extends React.Component {
     static navigationOptions = ({ navigation }) => {
@@ -23,6 +24,12 @@ export default class SignUp extends React.Component {
         passwordConfirmation: '',
         guestName: '',
         error: ''
+    }
+
+    componentDidMount() {
+        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
+            analytics.sendScreenView('SignUp');
+        });
     }
 
     onPressBack = () => {
@@ -82,6 +89,10 @@ export default class SignUp extends React.Component {
                 </View>
             </View>
         )
+    }
+
+    componentWillUnmount() {
+        this.didFocusListener.remove();
     }
 }
 
