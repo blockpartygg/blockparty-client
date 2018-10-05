@@ -4,7 +4,8 @@ class GoogleAnalytics {
     constructor() {}
 
     initialize() {
-        this._analytics = new Analytics('UA-127094492-1');
+        let trackingId = process.env.NODE_ENV === 'production' ? 'UA-127047083-1' : 'UA-127094492-1';
+        this._analytics = new Analytics(trackingId);
     }
 
     get analytics() {
