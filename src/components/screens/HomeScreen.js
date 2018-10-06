@@ -11,8 +11,8 @@ export default class Home extends React.Component {
 
     state = {
         uid: null,
-        name: '?',
-        currency: '0',
+        name: '',
+        currency: '',
         state: null,
         timeRemaining: '-:--',
         endTime: null,
