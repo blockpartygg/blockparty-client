@@ -18,7 +18,7 @@ import MinigameEnd from '../states/MinigameEnd';
 import RoundResultsScoreboard from '../states/RoundResultsScoreboard';
 import RoundResultsLeaderboard from '../states/RoundResultsLeaderboard';
 import PostgameCelebration from '../states/PostgameCelebration';
-import PostgameRewardsWithRouter from '../states/PostgameRewards';
+import PostgameRewards from '../states/PostgameRewards';
 
 import BackgroundScene from '../scenes/BackgroundScene';
 import RedLightGreenLightScene from '../scenes/RedLightGreenLightScene';
@@ -141,6 +141,7 @@ export default class Play extends React.Component {
 
     onPressBack = () => { 
         firebase.database.ref('players/' + firebase.uid).update({ playing: false });
+        analytics.sendEvent('Navigation', 'Navigate', 'Home');
         this.props.navigation.goBack(); 
     }
 
@@ -201,7 +202,7 @@ export default class Play extends React.Component {
                 overlay = <PostgameCelebration />
                 break;
             case "postgameRewards":
-                overlay = <PostgameRewardsWithRouter name={this.state.name} bits={this.state.bits} startPurchase={this.startPurchase} />
+                overlay = <PostgameRewards name={this.state.name} bits={this.state.bits} startPurchase={this.startPurchase} />
                 break;
             default:
                 overlay = null;
