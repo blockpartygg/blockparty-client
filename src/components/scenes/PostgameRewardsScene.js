@@ -20,7 +20,7 @@ class PostgameRewardsScene {
             new THREE.BoxGeometry(),
             new THREE.SphereGeometry(0.5),
             new THREE.ConeGeometry(0.5),
-            new THREE.CylinderGeometry(0.5),
+            new THREE.CylinderBufferGeometry(0.5, 0.5),
             new THREE.DodecahedronGeometry(0.5)
         ];
 
@@ -167,6 +167,8 @@ class PostgameRewardsScene {
             this.renderer.render(this.scene, this.camera);
         }
     }
+
+    shutdown() {}
 }
 
 export default PostgameRewardsScene;

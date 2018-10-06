@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Button } from 'react-native';
+import { View } from 'react-native';
 import ExpoTHREE from 'expo-three';
 import { View as GraphicsView } from 'expo-graphics';
 import { FontAwesome } from '@expo/vector-icons';
 import firebase from '../../Firebase';
 import TouchableView from '../TouchableView';
+import analytics from '../../Analytics';
 
 import PregameCountdown from '../states/PregameCountdown';
 import PregameTitle from '../states/PregameTitle';
@@ -17,15 +18,19 @@ import MinigameEnd from '../states/MinigameEnd';
 import RoundResultsScoreboard from '../states/RoundResultsScoreboard';
 import RoundResultsLeaderboard from '../states/RoundResultsLeaderboard';
 import PostgameCelebration from '../states/PostgameCelebration';
-import PostgameRewardsWithRouter from '../states/PostgameRewards';
+import PostgameRewards from '../states/PostgameRewards';
 
 import BackgroundScene from '../scenes/BackgroundScene';
 import RedLightGreenLightScene from '../scenes/RedLightGreenLightScene';
-import WhackABlockScene from '../scenes/WhackABlockScene';
+import BlockBlasterScene from '../scenes/BlockBlasterScene';
 import BlockioScene from '../scenes/BlockioScene';
 import PostgameRewardsScene from '../scenes/PostgameRewardsScene';
 
 export default class Play extends React.Component {
+    static navigationOptions = {
+        header: null
+    }
+
     state = {
         name: null,
         bits: null,
@@ -38,32 +43,29 @@ export default class Play extends React.Component {
 
     scene = null;
     overlay = null;
-    initializedMinigame = false;
 
-    constructor(props) {
-        super(props);
-        this.startPurchase = this.startPurchase.bind(this);
-    }
-
-    componentWillMount() {
-        firebase.auth.onAuthStateChanged(user => {
+    componentDidMount() {
+        this.unsubscribeAuthStateChanged = firebase.auth.onAuthStateChanged(user => {
             if(!user) {
-                this.props.history.replace('/');
+                firebase.signOut(() => {
+                    this.props.navigation.navigate('Title');
+                });
             } else {
                 firebase.database.ref('players/' + user.uid).once('value', snapshot => {
                     let player = snapshot.val();
                     if(!player) {
-                        this.props.history.replace('/');
+                        firebase.signOut(() => {
+                            this.props.navigation.navigate('Title');
+                        });
                     }
                     else {
                         if(!player.name) {
-                            this.props.history.replace('/');
+                            firebase.signOut(() => {
+                                this.props.navigation.navigate('Title');
+                            });
                         }
                         else {
                             this.setState({ name: player.name });
-                            if(this.redLightGreenLightScene) {
-                                this.redLightGreenLightScene.playerName = player.name;
-                            }
                         }
                     }
                 });
@@ -100,15 +102,35 @@ export default class Play extends React.Component {
                 this.setState({ mode: mode });
             }
         });
+        firebase.database.ref('game/teams/redTeamId').orderByValue().equalTo(firebase.uid).on('value', snapshot => {
+            if(snapshot.val()) {
+                this.setState({ team: "red" });
+            }
+        });
+        firebase.database.ref('game/teams/blueTeamId').orderByValue().equalTo(firebase.uid).on('value', snapshot => {
+            if(snapshot.val()) {
+                this.setState({ team: "blue" });
+            }
+        });
+        firebase.database.ref('players').on('value', snapshot => {
+            let players = snapshot.val();
+            if(players) {
+                this.setState({ players: players });
+            }
+        });
         firebase.database.ref('players/' + firebase.uid + '/currency').on('value', snapshot => {
             let bits = snapshot.val();
             if(bits) {
                 this.setState({ bits: bits });
             }
         });
+
+        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
+            analytics.sendScreenView('Play');
+        });
     }
 
-    startPurchase() {
+    startPurchase = () => {
         if(this.state.bits >= 100) {
             firebase.database.ref('players/' + firebase.uid + '/currency').set(this.state.bits - 100);
             let skinId = Math.floor(Math.random() * 5);
@@ -119,7 +141,8 @@ export default class Play extends React.Component {
 
     onPressBack = () => { 
         firebase.database.ref('players/' + firebase.uid).update({ playing: false });
-        this.props.history.goBack(); 
+        analytics.sendEvent('Navigation', 'Navigate', 'Home');
+        this.props.navigation.goBack(); 
     }
 
     render() {
@@ -158,7 +181,7 @@ export default class Play extends React.Component {
                 overlay = <RoundIntroduction round={this.state.round} minigame={this.state.minigame} mode={this.state.mode} />
                 break;
             case "roundInstructions":
-                overlay = <RoundInstructions round={this.state.round} minigame={this.state.minigame} mode={this.state.mode} />
+                overlay = <RoundInstructions round={this.state.round} minigame={this.state.minigame} mode={this.state.mode} team={this.state.team} />
                 break;
             case "minigameStart":
                 overlay = <MinigameStart />
@@ -170,19 +193,19 @@ export default class Play extends React.Component {
                 overlay = <MinigameEnd />
                 break;
             case "roundResultsScoreboard":
-                overlay = <RoundResultsScoreboard round={this.state.round} />
+                overlay = <RoundResultsScoreboard players={this.state.players} round={this.state.round} />
                 break;
             case "roundResultsLeaderboard":
-                overlay = <RoundResultsLeaderboard round={this.state.round} />
+                overlay = <RoundResultsLeaderboard players={this.state.players} round={this.state.round} />
                 break;
             case "postgameCelebration":
                 overlay = <PostgameCelebration />
                 break;
             case "postgameRewards":
-                overlay = <PostgameRewardsWithRouter name={this.state.name} bits={this.state.bits} startPurchase={this.startPurchase} />
+                overlay = <PostgameRewards name={this.state.name} bits={this.state.bits} startPurchase={this.startPurchase} />
                 break;
             default:
-                console.log(`invalid game state: ${this.state.state}`);
+                overlay = null;
                 break;
         }
         return overlay;
@@ -197,7 +220,7 @@ export default class Play extends React.Component {
         this.backgroundScene = new BackgroundScene(this.renderer);
         this.postgameRewardsScene = new PostgameRewardsScene(this.renderer);
         this.redLightGreenLightScene = new RedLightGreenLightScene(this.renderer, this.state);
-        this.whackABlockScene = new WhackABlockScene(this.renderer);
+        this.blockBlasterScene = new BlockBlasterScene(this.renderer);
         this.blockioScene = new BlockioScene(this.renderer);
     }
 
@@ -221,7 +244,7 @@ export default class Play extends React.Component {
                     this.minigameScene = this.redLightGreenLightScene;
                     break;
                 case "Block Blaster":
-                    this.minigameScene = this.whackABlockScene;
+                    this.minigameScene = this.blockBlasterScene;
                     break;
                 case "Block.io":
                     this.minigameScene = this.blockioScene;
@@ -238,33 +261,44 @@ export default class Play extends React.Component {
             case "pregameIntroduction":
             case "roundIntroduction":
             case "roundInstructions":
-                this.scene = this.backgroundScene;
-                break;
-            case "minigameStart":
-                this.scene = this.minigameScene;
-                if(this.scene) {
-                    if(!this.initializedMinigame) {
-                        this.scene.initialize();    
-                        this.initializedMinigame = true;
+                if(this.scene !== this.backgroundScene) {
+                    if(this.scene) {
+                        this.scene.shutdown();
                     }
+                    this.scene = this.backgroundScene;
+                    this.scene.initialize();
                 }
                 break;
+            case "minigameStart":
             case "minigamePlay":
             case "minigameEnd":
-                this.scene = this.minigameScene;
-                this.initializedMinigame = false;
+                if(this.scene !== this.minigameScene) {
+                    if(this.scene) {
+                        this.scene.shutdown();
+                    }
+                    this.scene = this.minigameScene;
+                    this.scene.initialize();
+                }
                 break;
             case "roundResultsScoreboard":
             case "roundResultsLeaderboard":
             case "postgameCelebration":
-                if(this.scene && this.scene.shutdown) {
-                    this.scene.shutdown();
+                if(this.scene && this.scene !== this.backgroundScene) {
+                    if(this.scene) {
+                        this.scene.shutdown();
+                    }
+                    this.scene = this.backgroundScene;
+                    this.scene.initialize();
                 }
-                this.scene = this.backgroundScene;
                 break;
             case "postgameRewards":
-                this.scene = this.postgameRewardsScene;
-                this.scene.initialize();
+                if(this.scene && this.scene !== this.postgameRewardsScene) {
+                    if(this.scene) {
+                        this.scene.shutdown();
+                    }
+                    this.scene = this.postgameRewardsScene;
+                    this.scene.initialize();
+                }
                 break;
             default:
                 break;
@@ -294,10 +328,13 @@ export default class Play extends React.Component {
     }
 
     componentWillUnmount() {
+        this.unsubscribeAuthStateChanged();
         firebase.database.ref('game/state').off();
         firebase.database.ref('game/endTime').off();
         firebase.database.ref('game/round').off();
         firebase.database.ref('game/minigame').off();
         firebase.database.ref('game/mode').off();
+
+        this.didFocusListener.remove();
     }
 }

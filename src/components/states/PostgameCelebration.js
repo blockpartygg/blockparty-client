@@ -8,7 +8,8 @@ export default class PostgameCelebration extends React.Component {
         leaderboard: []
     }
 
-    componentWillMount() {
+    componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Postgame Celebration');
         firebase.database.ref('players').on('value', snapshot => {
             this.setState({ players: snapshot.val() });
         });

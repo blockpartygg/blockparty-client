@@ -1,5 +1,6 @@
 import THREE from '../../THREE';
 import firebase from '../../Firebase';
+import socketIO from '../../SocketIO';
 import { TweenLite } from 'gsap';
 
 class RedLightGreenLightScene {
@@ -10,14 +11,14 @@ class RedLightGreenLightScene {
     initialize() {
         this.setupScene();
         this.setupCamera();
+        this.setupLighting();
         this.setupGround();
         this.setupFont();
         this.setupPlayerGeometry();
         this.setupPlayer();
         this.setupOtherPlayers();
         this.setupGreenLight();
-
-        this.sendStateInterval = setInterval(() => { this.sendPlayerState(); }, 1000 / 60);
+        this.sendStateInterval = setInterval(this.sendPlayerState, 1000 / 60);
     }
 
     setupScene() {
@@ -25,10 +26,6 @@ class RedLightGreenLightScene {
         this.sceneGreenColor = new THREE.Color(0x00ff00);
         this.sceneRedColor = new THREE.Color(0xff0000);
         this.scene.background = this.sceneGreenColor;
-
-        let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(0, 0, -1).normalize();
-        this.scene.add(directionalLight);
     }
 
     setupCamera() {
@@ -42,30 +39,30 @@ class RedLightGreenLightScene {
         this.camera.lookAt(this.scene.position);
     }
 
-    setupGround() {
-        const groundGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
-        const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x333333, overdraw: 0.5 });
-        this.groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
-        this.groundMesh.position.y = -1;
-        this.scene.add(this.groundMesh);
+    setupLighting() {
+        let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(0, 0, -1).normalize();
+        this.scene.add(directionalLight);
+    }
 
-        const lineGeometry = new THREE.Geometry();
+    setupGround() {
+        const groundGeometry = new THREE.Geometry();
         for(let x = -500; x <= 500; x += 1) {
-            lineGeometry.vertices.push(
+            groundGeometry.vertices.push(
                 new THREE.Vector3(x, 0, -500),
                 new THREE.Vector3(x, 0, 500)
             );
         }
         for(let z = -500; z <= 500; z += 1) {
-            lineGeometry.vertices.push(
+            groundGeometry.vertices.push(
                 new THREE.Vector3(-500, 0, z),
                 new THREE.Vector3(500, 0, z)
             );
         }
-        const lineMaterial = new THREE.MeshBasicMaterial({ color: "white" });
-        this.lineMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
-        this.lineMesh.position.y = -1;
-        this.scene.add(this.lineMesh);
+        const groundMaterial = new THREE.MeshBasicMaterial({ color: "white" });
+        this.groundMesh = new THREE.LineSegments(groundGeometry, groundMaterial);
+        this.groundMesh.position.y = -1;
+        this.scene.add(this.groundMesh);
     }
 
     setupFont() {
@@ -78,7 +75,7 @@ class RedLightGreenLightScene {
             new THREE.BoxBufferGeometry(),
             new THREE.SphereBufferGeometry(0.5),
             new THREE.ConeBufferGeometry(0.5),
-            new THREE.CylinderBufferGeometry(0.5),
+            new THREE.CylinderBufferGeometry(0.5, 0.5),
             new THREE.DodecahedronBufferGeometry(0.5)
         ];
     }
@@ -107,7 +104,7 @@ class RedLightGreenLightScene {
             }
             let playerName = player.name;
             const textGeometry = new THREE.TextGeometry(playerName, { font: this.font, size: 0.5, height: 0 });
-            const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+            const textMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
             this.textMesh = new THREE.Mesh(textGeometry, textMaterial);
             this.textMesh.position.x = 0;
             this.textMesh.position.y = 1.5;
@@ -120,10 +117,6 @@ class RedLightGreenLightScene {
 
     setupOtherPlayers() {
         this.otherPlayers = [];
-        this.otherPlayers.forEach(player => {
-            player.positionZ = 0;
-            player.mesh.position.z = player.positionZ;
-        });
 
         firebase.database.ref('players').orderByChild('playing').equalTo(true).on('value', snapshot => {
             let x = Math.floor(snapshot.numChildren() / 2) - snapshot.numChildren();
@@ -157,7 +150,7 @@ class RedLightGreenLightScene {
                     this.otherPlayers[playerSnapshot.key].group.add(this.otherPlayers[playerSnapshot.key].mesh);
 
                     const textGeometry = new THREE.TextGeometry(this.otherPlayers[playerSnapshot.key].name, { font: this.font, size: 0.5, height: 0 });
-                    const textMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+                    const textMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
                     this.otherPlayers[playerSnapshot.key].text = new THREE.Mesh(textGeometry, textMaterial);
                     this.otherPlayers[playerSnapshot.key].text.position.x = 0;
                     this.otherPlayers[playerSnapshot.key].text.position.y = 1.5;
@@ -169,48 +162,42 @@ class RedLightGreenLightScene {
             });
         });
 
-        firebase.database.ref('minigame/redLightGreenLight/players').on('value', snapshot => {
-            snapshot.forEach(player => {
-                if(player.key === firebase.uid) {
-                    return;
+        socketIO.socket.on('minigames/redLightGreenLight/player', (playerId, player) => {
+            if(playerId === firebase.uid) {
+                return;
+            }
+            if(!this.otherPlayers[playerId]) {
+                this.otherPlayers[playerId] = {};
+            }
+            this.otherPlayers[playerId].initialPositionZ = this.otherPlayers[playerId].positionZ;
+            this.otherPlayers[playerId].targetPositionZ = player.positionZ;
+            if(!this.otherPlayers[playerId].moving && this.otherPlayers[playerId].initialPositionZ !== this.otherPlayers[playerId].targetPositionZ) {
+                this.otherPlayers[playerId].moving = true;
+                let deltaPositionZ = this.otherPlayers[playerId].targetPositionZ - this.otherPlayers[playerId].initialPositionZ;
+                let moveDuration = 0.1;
+                if(this.otherPlayers[playerId].group) {
+                    TweenLite.to(this.otherPlayers[playerId].group.position, moveDuration, { y: 1, z: this.otherPlayers[playerId].initialPositionZ + deltaPositionZ * 0.75 });
+                    TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 1.2, z: 1 });
+                    TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 0.8, z: 1, delay: moveDuration });
+                    TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
+                    TweenLite.to(this.otherPlayers[playerId].group.position, moveDuration, { y: 0, z: this.otherPlayers[playerId].targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: () => { this.otherPlayers[playerId].positionZ = player.positionZ; this.otherPlayers[playerId].moving = false; } });
                 }
-                if(player.val()) {
-                    if(!this.otherPlayers[player.key]) {
-                        this.otherPlayers[player.key] = {};
-                    }
-                    this.otherPlayers[player.key].initialPositionZ = this.otherPlayers[player.key].positionZ;
-                    this.otherPlayers[player.key].targetPositionZ = player.val().positionZ;
-                    if(!this.otherPlayers[player.key].moving && this.otherPlayers[player.key].initialPositionZ !== this.otherPlayers[player.key].targetPositionZ) {
-                        this.otherPlayers[player.key].moving = true;
-                        let deltaPositionZ = this.otherPlayers[player.key].targetPositionZ - this.otherPlayers[player.key].initialPositionZ;
-                        let moveDuration = 0.1;
-                        TweenLite.to(this.otherPlayers[player.key].group.position, moveDuration, { y: 1, z: this.otherPlayers[player.key].initialPositionZ + deltaPositionZ * 0.75 });
-                        TweenLite.to(this.otherPlayers[player.key].group.scale, moveDuration, { y: 1.2, z: 1 });
-                        TweenLite.to(this.otherPlayers[player.key].group.scale, moveDuration, { y: 0.8, z: 1, delay: moveDuration });
-                        TweenLite.to(this.otherPlayers[player.key].group.scale, moveDuration, { y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
-                        TweenLite.to(this.otherPlayers[player.key].group.position, moveDuration, { y: 0, z: this.otherPlayers[player.key].targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: () => { this.otherPlayers[player.key].positionZ = player.val().positionZ; this.otherPlayers[player.key].moving = false; } });
-                        this.otherPlayers[player.key].initialPositionZ = this.otherPlayers[player.key].targetPositionZ;
-                    }
-                }
-            });
+                this.otherPlayers[playerId].initialPositionZ = this.otherPlayers[playerId].targetPositionZ;
+            }
         });
     }
 
     setupGreenLight() {
         this.greenLight = true;
 
-        firebase.database.ref('minigame/redLightGreenLight/greenLight').on('value', snapshot => {
-            let greenLight = snapshot.val();
+        socketIO.socket.on('minigames/redLightGreenLight/greenLight', greenLight => {
             this.greenLight = greenLight;
         });
     }
 
-    sendPlayerState() {
+    sendPlayerState = () => {
         if(firebase.isAuthed) {
-            firebase.database.ref('minigame/redLightGreenLight/players/' + firebase.uid).set(this.player);
-        }
-        else {
-            this.props.history.replace('/');
+            socketIO.socket.emit('minigames/redLightGreenLight/player', firebase.uid, this.player);
         }
     }
 
@@ -271,8 +258,6 @@ class RedLightGreenLightScene {
     shutdown() {
         firebase.database.ref('players/' + firebase.uid).off();
         firebase.database.ref('players').off();
-        firebase.database.ref('minigame/redLightGreenLight/players').off();
-        firebase.database.ref('minigame/redLightGreenLight/greenLight').off();
 
         clearInterval(this.sendStateInterval);
 

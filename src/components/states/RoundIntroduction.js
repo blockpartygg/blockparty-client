@@ -7,6 +7,7 @@ export default class RoundIntroduction extends React.Component {
     }
 
     componentWillMount() {
+        analytics.sendEvent('Game State', 'Start', 'Round Introduction');
         Animated.timing(this.state.scaleAnimation, { toValue: 1, duration: 3000 }).start();
     }
 

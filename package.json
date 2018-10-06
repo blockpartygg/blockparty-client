@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "expo": "^29.0.0",
+    "expo-analytics": "^1.0.7",
     "expo-graphics": "^1.0.0-alpha.5",
     "expo-three": "^3.0.0-alpha.2",
     "firebase": "^5.1.0",
@@ -27,7 +28,9 @@
     "react": "16.3.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-29.0.0.tar.gz",
     "react-native-gifted-chat": "^0.4.3",
+    "react-navigation": "^2.17.0",
     "react-router-native": "^4.2.0",
-    "react-router-navigation": "^1.0.0-rc.4"
+    "react-router-navigation": "^1.0.0-rc.4",
+    "socket.io": "^2.1.1"
   }
 }

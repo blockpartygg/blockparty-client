@@ -8,11 +8,8 @@ export default class RoundResultsLeaderboard extends React.Component {
         leaderboard: []
     }
 
-    componentWillMount() {
-        firebase.database.ref('players').on('value', snapshot => {
-            this.setState({ players: snapshot.val() });
-        });
-
+    componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Round Results Leaderboard');
         firebase.database.ref('game/leaderboard').orderByValue().on('value', snapshot => {
             let leaderboard = [];
             snapshot.forEach(score => {
@@ -21,7 +18,6 @@ export default class RoundResultsLeaderboard extends React.Component {
                     score: score.val(),
                 });
             });
-            
             this.setState({ leaderboard: leaderboard.reverse() });
         });
     }
@@ -31,7 +27,7 @@ export default class RoundResultsLeaderboard extends React.Component {
         if(this.state.leaderboard) {
             let rank = 1;
             this.state.leaderboard.forEach(score => {
-                leaderboardData.push({ key: score.key, rank: rank, name: this.state.players[score.key] && this.state.players[score.key].name, score: score.score });
+                leaderboardData.push({ key: score.key, rank: rank, name: this.props.players[score.key] && this.props.players[score.key].name, score: score.score });
                 rank++;
             });
         }

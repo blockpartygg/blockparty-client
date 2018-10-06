@@ -5,14 +5,11 @@ import firebase from '../../Firebase';
 export default class RoundResultsScoreboard extends React.Component {
     state = {
         players: [],
-        scoreboard: []
+        scoreboard: [],
     }
 
-    componentWillMount() {
-        firebase.database.ref('players').on('value', snapshot => {
-            this.setState({ players: snapshot.val() });
-        });
-
+    componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Round Results Scoreboard');
         firebase.database.ref('game/scoreboard').orderByValue().on('value', snapshot => {
             let scoreboard = [];
             snapshot.forEach(score => {
@@ -21,17 +18,16 @@ export default class RoundResultsScoreboard extends React.Component {
                     score: score.val(),
                 });
             });
-            
             this.setState({ scoreboard: scoreboard.reverse() });
         });
     }
 
     render() {
         let scoreboardData = [];
-        if(this.state.scoreboard) {
+        if(this.state.scoreboard && this.state.players) {
             let rank = 1;
             this.state.scoreboard.forEach(score => {
-                scoreboardData.push({ key: score.key, rank: rank, name: this.state.players[score.key] && this.state.players[score.key].name, score: score.score });
+                scoreboardData.push({ key: score.key, rank: rank, name: this.props.players[score.key] && this.props.players[score.key].name, score: score.score });
                 rank++;
             });
         }

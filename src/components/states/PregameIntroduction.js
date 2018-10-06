@@ -6,7 +6,8 @@ export default class PregameIntroduction extends React.Component {
         opacityAnimation: new Animated.Value(0)
     }
 
-    componentWillMount() {
+    componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Pregame Introduction');
         Animated.timing(this.state.opacityAnimation, { toValue: 1, duration: 1000 }).start();
     }
 

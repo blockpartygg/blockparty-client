@@ -1,9 +1,22 @@
 import React from 'react';
-import { View, Text, KeyboardAvoidingView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import firebase from '../../Firebase';
+import analytics from '../../Analytics';
 
 export default class SignIn extends React.Component {
+    static navigationOptions = ({ navigation }) => {
+        return {
+            header: (
+                <View style={styles.header}>
+                    <FontAwesome.Button onPress={() => { navigation.goBack(); }} name="chevron-left" color="white" backgroundColor="transparent" style={styles.headerBackButton} />
+                    <Text style={styles.headerText}>SIGN IN</Text>
+                    <View style={styles.headerHorizontalBar} />
+                </View>
+            )
+        }
+    }
+
     state = {
         email: '',
         password: '',
@@ -12,9 +25,16 @@ export default class SignIn extends React.Component {
         playAsGuestError: '',
     }
 
+    componentDidMount() {
+        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
+            analytics.sendScreenView('SignIn');
+        });
+    }
+
     handleSignIn = (event) => {
         firebase.signIn(this.state.email, this.state.password, () => {
-            this.props.history.push('/home');
+            analytics.sendEvent('Player', 'Sign in');
+            this.props.navigation.navigate('Home');
         }, error => {
             this.setState({ signInError: error });
         });
@@ -23,18 +43,16 @@ export default class SignIn extends React.Component {
 
     handlePlayAsGuest = (event) => {
         firebase.signInAsGuest(this.state.name, () => {
-            this.props.history.push('/home');
+            analytics.sendEvent('Player', 'Sign in as guest');
+            this.props.navigation.navigate('Home');
         }, error => {
             this.setState({ playAsGuestError: error });
         });
     }
 
     onPressSignUp = () => {
-        this.props.history.push('signUp');
-    }
-
-    onPressBack = () => {
-        this.props.history.goBack();
+        analytics.sendEvent('Navigation', 'Navigate', 'SignUp');
+        this.props.navigation.navigate('SignUp');
     }
 
     render() {
@@ -46,12 +64,7 @@ export default class SignIn extends React.Component {
 
         return(
             <View style={styles.container}>
-                <KeyboardAvoidingView behavior="padding" enabled style={{ flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center", backgroundColor: "transparent" }}>
-                    <View style={styles.header}>
-                        <FontAwesome.Button onPress={this.onPressBack} name="chevron-left" color="white" backgroundColor="transparent" style={styles.headerBackButton} />
-                        <Text style={styles.headerText}>SIGN IN</Text>
-                        <View style={styles.headerHorizontalBar} />
-                    </View>
+                <View behavior="padding" enabled style={{ flex: 1, flexDirection: "column", justifyContent: "center", alignItems: "center", backgroundColor: "transparent" }}>
                     <View style={styles.form}>
                         <Text style={styles.instructionsText}>Welcome back!</Text>
                         <Text style={styles.instructionsText}>Sign in to join the Party.</Text>
@@ -70,9 +83,13 @@ export default class SignIn extends React.Component {
                         <Text style={styles.signUpLabel}>Don't have an account?</Text>
                         <Text onPress={this.onPressSignUp} style={styles.signUpLink}>Sign up!</Text>
                     </View>
-                </KeyboardAvoidingView>
+                </View>
             </View>
         )
+    }
+
+    componentWillUnmount() {
+        this.didFocusListener.remove();
     }
 }
 

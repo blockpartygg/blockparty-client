@@ -2,14 +2,19 @@ import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { GiftedChat } from 'react-native-gifted-chat';
 import firebase from '../../Firebase';
+import analytics from '../../Analytics';
 
 export default class Home extends React.Component {
+    static navigationOptions = {
+        header: null
+    }
+
     state = {
         uid: null,
-        name: null,
-        currency: null,
+        name: '',
+        currency: '',
         state: null,
-        timeRemaining: null,
+        timeRemaining: '-:--',
         endTime: null,
         round: null,
         minigame: null,
@@ -17,23 +22,25 @@ export default class Home extends React.Component {
         messages: [],
     }
 
-    componentWillMount() {
-        firebase.auth.onAuthStateChanged(user => {
+    componentDidMount() {
+        this.unsubscribeAuthStateChanged = firebase.auth.onAuthStateChanged(user => {
             if(!user) {
-                this.props.history.push('/');
+                firebase.signOut(() => {
+                    this.props.navigation.navigate('Title');
+                });
              } else {
                 this.setState({ uid: user.uid });
                 firebase.database.ref('players').child(user.uid).once('value', snapshot => {
                     let player = snapshot.val();
                     if(!player) {
                         firebase.signOut(() => {
-                            this.props.history.push('/');
+                            this.props.navigation.navigate('Title');
                         });
                     }
                     else {
                         if(!player.name) {
                             firebase.signOut(() => {
-                                this.props.history.push('/');
+                                this.props.navigation.navigate('Title');
                             });
                         }
                         else {
@@ -89,11 +96,14 @@ export default class Home extends React.Component {
                 messages: GiftedChat.append && GiftedChat.append(previousState.messages, message),
             }));
         });
+        this.updateTimerId = setInterval(this.update, 1000);
 
-        this.updateInterval = setInterval(() => { this.update(); }, 1000);
+        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
+            analytics.sendScreenView('Home');
+        });
     }
 
-    update() {
+    update = () => {
         if(this.state.endTime != null) {
             let timeRemaining = new Date(new Date(this.state.endTime).getTime() - Date.now());
             let minutes = timeRemaining.getMinutes();
@@ -105,13 +115,16 @@ export default class Home extends React.Component {
 
     onPressSignOut = () => {
         firebase.signOut(() => {
-            this.props.history.push('/');
+            analytics.sendEvent('Player', 'Sign out');
+            analytics.sendEvent('Navigation', 'Navigate', 'Title');
+            this.props.navigation.navigate('Title');
         });
     }
 
     onPressPlay = () => { 
         firebase.database.ref('players/' + firebase.uid).update({ playing: true });
-        this.props.history.push('/play'); 
+        analytics.sendEvent('Navigation', 'Navigate', 'Play');
+        this.props.navigation.navigate('Play'); 
     }
 
     onSend = messages => {
@@ -119,6 +132,7 @@ export default class Home extends React.Component {
             const { text, user } = messages[i];
             let timestamp = firebase.timestamp;
             firebase.database.ref('messages').push({ text, user, timestamp });
+            analytics.sendEvent('Chat', 'Send message');
         }
     }
 
@@ -161,7 +175,7 @@ export default class Home extends React.Component {
                 stateString = "The party just ended";
                 break;
             default:
-                console.log(`invalid game state: ${this.state.state}`);
+                stateString = "?";
                 break;
         }
 
@@ -171,8 +185,8 @@ export default class Home extends React.Component {
                     <TouchableOpacity onPress={this.onPressSignOut} style={styles.signOutButton}>
                         <Text style={styles.signOutButtonText}>Sign out</Text>
                     </TouchableOpacity>
-                    <View style={styles.homeLabel}>
-                        <Text style={styles.homeLabelText}>Lobby</Text>
+                    <View style={styles.HomeLabel}>
+                        <Text style={styles.HomeLabelText}>Lobby</Text>
                     </View>
                     <View style={styles.playerBadge}>
                         <Text style={styles.playerBadgeName}>{nameString}</Text>
@@ -182,6 +196,8 @@ export default class Home extends React.Component {
                 <View style={styles.gameState}>
                     <Text style={styles.gameStateTimeRemainingText}>{this.state.timeRemaining}</Text>
                     <Text style={styles.gameStateText}>{stateString}</Text>
+                    <Text style={styles.gameStateText}>{this.state.minigame && this.state.minigame.name}</Text>
+                    <Text style={styles.gameStateText}>{this.state.mode && this.state.mode.name}</Text>
                     <TouchableOpacity onPress={this.onPressPlay} style={styles.playButton}>
                         <Text style={styles.playButtonText}>Play</Text>
                     </TouchableOpacity>
@@ -194,6 +210,8 @@ export default class Home extends React.Component {
     }
 
     componentWillUnmount() {
+        this.unsubscribeAuthStateChanged();
+
         firebase.database.ref('game/state').off();
         firebase.database.ref('game/endTime').off();
         firebase.database.ref('game/round').off();
@@ -201,7 +219,9 @@ export default class Home extends React.Component {
         firebase.database.ref('game/mode').off();
         firebase.database.ref('messages').off();
 
-        clearInterval(this.updateInterval);
+        clearInterval(this.updateTimerId);
+
+        this.didFocusListener.remove();
     }
 }
 
@@ -238,7 +258,7 @@ const styles = StyleSheet.create({
         textAlign: "center", 
         color: "#570C76" 
     },
-    homeLabel: {
+    HomeLabel: {
         height: "100%",
         marginTop: 50,
         marginRight: 10,
@@ -248,7 +268,7 @@ const styles = StyleSheet.create({
         borderWidth: 5,
         borderColor: "#B4287D"
     },
-    homeLabelText: {
+    HomeLabelText: {
         padding: 15,
         fontSize: 24,
         fontWeight: "bold",

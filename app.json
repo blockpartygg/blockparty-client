@@ -3,7 +3,7 @@
     "name": "Block Party",
     "description": "The live minigame competition",
     "slug": "block-party",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "orientation": "portrait",
     "sdkVersion": "29.0.0",
     "ios": {
