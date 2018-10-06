@@ -38,6 +38,7 @@ export default class SignUp extends React.Component {
 
     handleSignUp = (event) => {
         firebase.signUp(this.state.email, this.state.password, this.state.name, () => {
+            analytics.sendEvent('Player', 'Sign up');
             this.props.navigation.navigate('Home');
         }, error => {
             this.setState({ error: error });
@@ -47,6 +48,7 @@ export default class SignUp extends React.Component {
 
     handlePlayAsGuest = (event) => {
         firebase.signInAsGuest(this.state.guestName, () => {
+            analytics.sendEvent('Player', 'Sign in as guest');
             this.props.navigation.navigate('Home');
         }, error => {
             this.setState({ error: error });
@@ -55,6 +57,7 @@ export default class SignUp extends React.Component {
     }
 
     onPressSignIn = () => {
+        analytics.sendEvent('Navigation', 'Navigate', 'SignIn');
         this.props.navigation.navigate('SignIn');
     }
 

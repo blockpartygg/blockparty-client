@@ -33,10 +33,12 @@ export default class Title extends React.Component {
             this.playDestination = 'Home';
             firebase.setupSocket();
             firebase.setupPresence();
+            analytics.sendEvent('Navigation', 'Navigate', this.playDestination);
             this.props.navigation.navigate(this.playDestination);
         }
         else {
             this.getPlayerAccountCreated().then(() => {
+                analytics.sendEvent('Navigation', 'Navigate', this.playDestination);
                 this.props.navigation.navigate(this.playDestination);
             });
         }
@@ -57,10 +59,12 @@ export default class Title extends React.Component {
     }
 
     onPressTermsOfUse = () => {
+        analytics.sendEvent('Navigation', 'Navigate', 'TermsOfService');
         this.props.navigation.navigate('Web');
     }
 
     onPressPrivacyPolicy = () => {
+        analytics.sendEvent('Navigation', 'Navigate', 'PrivacyPolicy');
         this.props.navigation.navigate('Web');
     }
 

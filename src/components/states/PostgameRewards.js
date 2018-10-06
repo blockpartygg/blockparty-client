@@ -21,6 +21,7 @@ class PostgameRewards extends React.Component {
     }
 
     componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Postgame Rewards');
         firebase.database.ref('players/' + firebase.uid).on('value', snapshot => {
             let player = snapshot.val();
             if(player) {
@@ -81,6 +82,7 @@ class PostgameRewards extends React.Component {
     }
 
     onPressWatchAd = () => {
+        analytics.sendEvent('Monetization', 'Watch Ad');
         this.showAdAsync();
     }
 

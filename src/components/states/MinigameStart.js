@@ -7,7 +7,8 @@ export default class MinigameStart extends React.Component {
         opacityAnimation: new Animated.Value(1)
     }
 
-    componentWillMount() {
+    componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Minigame Start');
         Animated.sequence([
             Animated.timing(this.state.translateAnimation, { toValue: 0, duration: 500 }),
             Animated.delay(3000),

@@ -7,7 +7,8 @@ export default class PregameTitle extends React.Component {
         scaleAnimation: new Animated.Value(0)
     }
 
-    componentWillMount() {
+    componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Pregame Title');
         Animated.spring(this.state.scaleAnimation, { toValue: 1, friction: 1 }).start();
     }
 

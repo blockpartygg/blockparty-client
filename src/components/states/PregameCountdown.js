@@ -10,7 +10,8 @@ export default class PregameCountdown extends React.Component {
         }
     }
 
-    componentWillMount() {
+    componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Pregame Countdown');
         this.updateInterval = setInterval(() => { this.update(); }, 1000);
     }
 

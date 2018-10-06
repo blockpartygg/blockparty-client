@@ -10,6 +10,7 @@ export default class MinigamePlay extends React.Component {
     }
 
     componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Minigame Play');
         firebase.database.ref('players').on('value', snapshot => {
             this.setState({ players: snapshot.val() });
         });

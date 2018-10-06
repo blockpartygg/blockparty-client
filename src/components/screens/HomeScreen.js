@@ -115,12 +115,15 @@ export default class Home extends React.Component {
 
     onPressSignOut = () => {
         firebase.signOut(() => {
+            analytics.sendEvent('Player', 'Sign out');
+            analytics.sendEvent('Navigation', 'Navigate', 'Title');
             this.props.navigation.navigate('Title');
         });
     }
 
     onPressPlay = () => { 
         firebase.database.ref('players/' + firebase.uid).update({ playing: true });
+        analytics.sendEvent('Navigation', 'Navigate', 'Play');
         this.props.navigation.navigate('Play'); 
     }
 
@@ -129,6 +132,7 @@ export default class Home extends React.Component {
             const { text, user } = messages[i];
             let timestamp = firebase.timestamp;
             firebase.database.ref('messages').push({ text, user, timestamp });
+            analytics.sendEvent('Chat', 'Send message');
         }
     }
 
@@ -216,7 +220,7 @@ export default class Home extends React.Component {
         firebase.database.ref('messages').off();
 
         clearInterval(this.updateTimerId);
-        
+
         this.didFocusListener.remove();
     }
 }

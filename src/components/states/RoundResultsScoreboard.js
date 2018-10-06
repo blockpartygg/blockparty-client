@@ -9,6 +9,7 @@ export default class RoundResultsScoreboard extends React.Component {
     }
 
     componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Round Results Scoreboard');
         firebase.database.ref('game/scoreboard').orderByValue().on('value', snapshot => {
             let scoreboard = [];
             snapshot.forEach(score => {

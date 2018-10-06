@@ -8,7 +8,8 @@ export default class RoundResultsLeaderboard extends React.Component {
         leaderboard: []
     }
 
-    componentWillMount() {
+    componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Round Results Leaderboard');
         firebase.database.ref('game/leaderboard').orderByValue().on('value', snapshot => {
             let leaderboard = [];
             snapshot.forEach(score => {

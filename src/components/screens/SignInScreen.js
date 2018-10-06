@@ -31,12 +31,9 @@ export default class SignIn extends React.Component {
         });
     }
 
-    onPressBack = () => {
-        this.props.navigation.goBack();
-    }
-
     handleSignIn = (event) => {
         firebase.signIn(this.state.email, this.state.password, () => {
+            analytics.sendEvent('Player', 'Sign in');
             this.props.navigation.navigate('Home');
         }, error => {
             this.setState({ signInError: error });
@@ -46,6 +43,7 @@ export default class SignIn extends React.Component {
 
     handlePlayAsGuest = (event) => {
         firebase.signInAsGuest(this.state.name, () => {
+            analytics.sendEvent('Player', 'Sign in as guest');
             this.props.navigation.navigate('Home');
         }, error => {
             this.setState({ playAsGuestError: error });
@@ -53,6 +51,7 @@ export default class SignIn extends React.Component {
     }
 
     onPressSignUp = () => {
+        analytics.sendEvent('Navigation', 'Navigate', 'SignUp');
         this.props.navigation.navigate('SignUp');
     }
 

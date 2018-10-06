@@ -175,11 +175,13 @@ class RedLightGreenLightScene {
                 this.otherPlayers[playerId].moving = true;
                 let deltaPositionZ = this.otherPlayers[playerId].targetPositionZ - this.otherPlayers[playerId].initialPositionZ;
                 let moveDuration = 0.1;
-                TweenLite.to(this.otherPlayers[playerId].group.position, moveDuration, { y: 1, z: this.otherPlayers[playerId].initialPositionZ + deltaPositionZ * 0.75 });
-                TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 1.2, z: 1 });
-                TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 0.8, z: 1, delay: moveDuration });
-                TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
-                TweenLite.to(this.otherPlayers[playerId].group.position, moveDuration, { y: 0, z: this.otherPlayers[playerId].targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: () => { this.otherPlayers[playerId].positionZ = player.positionZ; this.otherPlayers[playerId].moving = false; } });
+                if(this.otherPlayers[playerId].group) {
+                    TweenLite.to(this.otherPlayers[playerId].group.position, moveDuration, { y: 1, z: this.otherPlayers[playerId].initialPositionZ + deltaPositionZ * 0.75 });
+                    TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 1.2, z: 1 });
+                    TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 0.8, z: 1, delay: moveDuration });
+                    TweenLite.to(this.otherPlayers[playerId].group.scale, moveDuration, { y: 1, z: 1, ease: Bounce.easeOut, delay: moveDuration * 2 });
+                    TweenLite.to(this.otherPlayers[playerId].group.position, moveDuration, { y: 0, z: this.otherPlayers[playerId].targetPositionZ, ease: Power4.easeOut, delay: moveDuration * 1.51, onComplete: () => { this.otherPlayers[playerId].positionZ = player.positionZ; this.otherPlayers[playerId].moving = false; } });
+                }
                 this.otherPlayers[playerId].initialPositionZ = this.otherPlayers[playerId].targetPositionZ;
             }
         });

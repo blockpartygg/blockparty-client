@@ -8,6 +8,7 @@ export default class RoundInstructions extends React.Component {
     }
 
     componentDidMount() {
+        analytics.sendEvent('Game State', 'Start', 'Round Instructions');
         Animated.timing(this.state.scaleAnimation, { toValue: 1, duration: 1000 }).start();
     }
 

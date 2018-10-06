@@ -1,4 +1,4 @@
-import { Analytics, ScreenHit } from 'expo-analytics';
+import { Analytics, ScreenHit, Event } from 'expo-analytics';
 
 class GoogleAnalytics {
     constructor() {}
@@ -14,6 +14,10 @@ class GoogleAnalytics {
 
     sendScreenView(screenName) {
         this._analytics.hit(new ScreenHit(screenName));
+    }
+
+    sendEvent(category, action, label, value) {
+        this._analytics.event(new Event(category, action, label, value));
     }
 }
 
