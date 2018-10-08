@@ -92,8 +92,6 @@ class PostgameRewardsScene {
 
     setupPlayer() {
         this.playerGroup = new THREE.Group();
-        this.playerGroup.rotation.x = Math.PI / 6;
-        this.playerGroup.rotation.y = Math.PI / 6;
         this.scene.add(this.playerGroup);
 
         firebase.database.ref('players/' + firebase.uid).on('value', snapshot => {
@@ -106,6 +104,8 @@ class PostgameRewardsScene {
             const avatarGeometry = this.avatarGeometry[player.currentSkin || 0];
             const avatarMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
             this.playerAvatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
+            this.playerAvatarMesh.rotation.x = Math.PI / 6;
+            this.playerAvatarMesh.rotation.y = Math.PI / 6;
             this.playerGroup.add(this.playerAvatarMesh);
 
             // setup player name mesh
@@ -117,7 +117,7 @@ class PostgameRewardsScene {
             this.playerNameMesh = new THREE.Mesh(nameGeometry, nameMaterial);
             nameGeometry.computeBoundingBox();
             this.playerNameMesh.position.x = -nameGeometry.boundingBox.max.x / 2;
-            this.playerNameMesh.position.y = 0.5;
+            this.playerNameMesh.position.y = 1.5;
             this.playerGroup.add(this.playerNameMesh);
         });
     }
@@ -125,15 +125,15 @@ class PostgameRewardsScene {
     onTouchesBegan(state) {}
 
     startPurchase() {
-        TweenLite.to(this.playerGroup.rotation, 1, { y: 4 * Math.PI, onComplete: () => { 
-            this.playerGroup.rotation.x = Math.PI / 6;
-            this.playerGroup.rotation.y = Math.PI / 6;
+        TweenLite.to(this.playerAvatarMesh.rotation, 1, { y: 4 * Math.PI, onComplete: () => { 
+            this.playerAvatarMesh.rotation.x = Math.PI / 6;
+            this.playerAvatarMesh.rotation.y = Math.PI / 6;
         }});
-        TweenLite.to(this.playerGroup.scale, 1, { x: 0, y: 0, z: 0 });
-        TweenLite.to(this.playerGroup.scale, 3, { x: 1, y: 1, z: 1, delay: 2 });
-        TweenLite.to(this.playerGroup.rotation, 3, { y: 4 * Math.PI + Math.PI / 6, onCompelte: () => {
-            this.playerGroup.rotation.x = Math.PI / 6;
-            this.playerGroup.rotation.y = Math.PI / 6;
+        TweenLite.to(this.playerAvatarMesh.scale, 1, { x: 0, y: 0, z: 0 });
+        TweenLite.to(this.playerAvatarMesh.scale, 3, { x: 1, y: 1, z: 1, delay: 2 });
+        TweenLite.to(this.playerAvatarMesh.rotation, 3, { y: 4 * Math.PI + Math.PI / 6, onCompelte: () => {
+            this.playerAvatarMesh.rotation.x = Math.PI / 6;
+            this.playerAvatarMesh.rotation.y = Math.PI / 6;
         }});
     }
 

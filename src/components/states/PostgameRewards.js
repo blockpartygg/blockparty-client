@@ -75,6 +75,7 @@ class PostgameRewards extends React.Component {
     }
 
     onPressPurchasePrize = () => {
+        analytics.sendEvent('Monetization', 'Buy Skin');
         this.setState({ isPurchaseDisabled: true });
         this.currency.value = this.state.currency;
         TweenLite.to(this.currency, 3, { value: this.state.currency - 100 });
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
         color: "white"
     },
     purchaseSkinButton: {
-        width: "100%",
+        width: "80%",
         margin: 10,
         padding: 10,
         backgroundColor: "#EE3AAF",
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
         color: "white"
     },
     watchAdButton: {
-        width: "100%",
+        width: "80%",
         margin: 10,
         padding: 10,
         backgroundColor: "#EE3AAF",
