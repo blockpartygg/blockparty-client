@@ -110,6 +110,7 @@ class PostgameRewards extends React.Component {
     }
 
     componentWillUnmount() {
+        firebase.database.ref('players/' + firebase.uid).off();
         AdMobRewarded.removeAllListeners();
         cancelAnimationFrame(this.raf);
     }

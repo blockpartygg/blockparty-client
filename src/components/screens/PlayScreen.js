@@ -261,47 +261,33 @@ export default class Play extends React.Component {
             case "pregameIntroduction":
             case "roundIntroduction":
             case "roundInstructions":
-                if(this.scene !== this.backgroundScene) {
-                    if(this.scene) {
-                        this.scene.shutdown();
-                    }
-                    this.scene = this.backgroundScene;
-                    this.scene.initialize();
-                }
+                this.setScene(this.backgroundScene);
                 break;
             case "minigameStart":
             case "minigamePlay":
             case "minigameEnd":
-                if(this.scene !== this.minigameScene) {
-                    if(this.scene) {
-                        this.scene.shutdown();
-                    }
-                    this.scene = this.minigameScene;
-                    this.scene.initialize();
-                }
+                this.setScene(this.minigameScene);
                 break;
             case "roundResultsScoreboard":
             case "roundResultsLeaderboard":
             case "postgameCelebration":
-                if(this.scene && this.scene !== this.backgroundScene) {
-                    if(this.scene) {
-                        this.scene.shutdown();
-                    }
-                    this.scene = this.backgroundScene;
-                    this.scene.initialize();
-                }
+                this.setScene(this.backgroundScene);
                 break;
             case "postgameRewards":
-                if(this.scene && this.scene !== this.postgameRewardsScene) {
-                    if(this.scene) {
-                        this.scene.shutdown();
-                    }
-                    this.scene = this.postgameRewardsScene;
-                    this.scene.initialize();
-                }
+                this.setScene(this.postgameRewardsScene);
                 break;
             default:
                 break;
+        }
+    }
+
+    setScene(scene) {
+        if(this.scene !== scene) {
+            if(this.scene) {
+                this.scene.shutdown();
+            }
+            this.scene = scene;
+            this.scene.initialize();
         }
     }
 
