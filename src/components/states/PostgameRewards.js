@@ -1,5 +1,5 @@
 import React from 'react';
-import { View , Text, Button, StyleSheet } from 'react-native';
+import { View , Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { AdMobRewarded } from 'expo';
 import { TweenLite } from 'gsap';
 import firebase from '../../Firebase';
@@ -93,7 +93,6 @@ class PostgameRewards extends React.Component {
     render() {
         return(
             <View style={styles.container} pointerEvents="box-none">
-                <Text style={styles.title}>{this.props.name}</Text>
                 <View style={styles.avatar} />
                 <View style={styles.currency}>
                     <Text style={styles.currencyLabel}>BB</Text>
@@ -102,9 +101,12 @@ class PostgameRewards extends React.Component {
                     </View>
                     <Text style={styles.currencyGain}>+{this.state.currencyGain}</Text>
                 </View>
-                <Text style={styles.currencyTooltip}>Earn Block Bits (BB) by playing and winning games. Then spend them on cosmetic upgrades and new ways to play coming in the future!</Text>
-                <Button title="Buy a new look (100 BB)" onPress={this.onPressPurchasePrize} disabled={this.state.isPurchaseDisabled} style={{ flex: 1 }} />
-                <Button title="Watch an ad to earn a bonus 100 BB" onPress={this.onPressWatchAd} disabled={this.state.didWatchAd} style={{ flex: 1 }} />
+                <TouchableOpacity onPress={this.onPressPurchasePrize} disabled={this.state.isPurchaseDisabled} style={styles.purchaseSkinButton}>
+                    <Text style={styles.purchaseSkinButtonText}>Buy a skin (-100 BB)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={this.onPressWatchAd} disabled={this.state.didWatchAd} style={styles.watchAdButton}>
+                    <Text style={styles.watchAdButtonText}>Watch an ad (+100 BB)</Text>
+                </TouchableOpacity>
             </View>
         )
     }
@@ -194,6 +196,34 @@ const styles = StyleSheet.create({
     },
     currencyTooltip: {
         fontSize: 24,
+        textAlign: "center",
+        color: "white"
+    },
+    purchaseSkinButton: {
+        width: "100%",
+        margin: 10,
+        padding: 10,
+        backgroundColor: "#EE3AAF",
+        borderWidth: 5,
+        borderColor: "#B4287D"
+    },
+    purchaseSkinButtonText: {
+        fontSize: 24,
+        fontWeight: "bold",
+        textAlign: "center",
+        color: "white"
+    },
+    watchAdButton: {
+        width: "100%",
+        margin: 10,
+        padding: 10,
+        backgroundColor: "#EE3AAF",
+        borderWidth: 5,
+        borderColor: "#B4287D"
+    },
+    watchAdButtonText: {
+        fontSize: 24,
+        fontWeight: "bold",
         textAlign: "center",
         color: "white"
     }
