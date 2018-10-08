@@ -320,6 +320,10 @@ export default class Play extends React.Component {
         firebase.database.ref('game/round').off();
         firebase.database.ref('game/minigame').off();
         firebase.database.ref('game/mode').off();
+        firebase.database.ref('game/teams/redTeamId').off();
+        firebase.database.ref('game/teams/blueTeamId').off();
+        firebase.database.ref('players').off();
+        firebase.database.ref('players/' + firebase.uid + '/currency').off();
 
         this.didFocusListener.remove();
     }
