@@ -164,7 +164,7 @@ export default class Home extends React.Component {
             case "minigameStart":
             case "minigamePlay":
             case "minigameEnd":
-                stateString = "Minigame in progress";
+                stateString = "Round " + this.state.round + " is in progress";
                 break;
             case "roundResultsScoreboard":
             case "roundResultsLeaderboard":
@@ -296,13 +296,13 @@ const styles = StyleSheet.create({
     gameStateTimeRemainingText: {
         fontSize: 64,
         fontWeight: "bold",
-        textAlign: "left",
+        textAlign: "center",
         color: "white"
     },
     gameStateText: { 
         fontSize: 20,
         fontWeight: "bold",
-        textAlign: "left",
+        textAlign: "center",
         color: "white",
     },
     playButton: {
