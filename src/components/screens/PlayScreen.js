@@ -32,8 +32,8 @@ export default class Play extends React.Component {
     }
 
     state = {
-        name: null,
-        bits: null,
+        player: {},
+        players: [],
         state: null,
         endTime: null,
         round: null,
@@ -45,13 +45,22 @@ export default class Play extends React.Component {
     overlay = null;
 
     componentDidMount() {
+        this.setupAuthListener();
+        this.setupDatabaseListeners();
+
+        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
+            analytics.sendScreenView('Play');
+        });
+    }
+
+    setupAuthListener() {
         this.unsubscribeAuthStateChanged = firebase.auth.onAuthStateChanged(user => {
             if(!user) {
                 firebase.signOut(() => {
                     this.props.navigation.navigate('Title');
                 });
             } else {
-                firebase.database.ref('players/' + user.uid).once('value', snapshot => {
+                firebase.database.ref('players/' + user.uid).on('value', snapshot => {
                     let player = snapshot.val();
                     if(!player) {
                         firebase.signOut(() => {
@@ -65,13 +74,15 @@ export default class Play extends React.Component {
                             });
                         }
                         else {
-                            this.setState({ name: player.name });
+                            this.setState({ player: player });
                         }
                     }
                 });
             }
         });
+    }
 
+    setupDatabaseListeners() {
         firebase.database.ref('game/state').on('value', snapshot => {
             let state = snapshot.val();
             if(state) {
@@ -118,21 +129,11 @@ export default class Play extends React.Component {
                 this.setState({ players: players });
             }
         });
-        firebase.database.ref('players/' + firebase.uid + '/currency').on('value', snapshot => {
-            let bits = snapshot.val();
-            if(bits) {
-                this.setState({ bits: bits });
-            }
-        });
-
-        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
-            analytics.sendScreenView('Play');
-        });
     }
 
     startPurchase = () => {
-        if(this.state.bits >= 100) {
-            firebase.database.ref('players/' + firebase.uid + '/currency').set(this.state.bits - 100);
+        if(this.state.player.currency >= 100) {
+            firebase.database.ref('players/' + firebase.uid + '/currency').set(this.state.player.currency - 100);
             let skinId = Math.floor(Math.random() * 5);
             firebase.database.ref('players/' + firebase.uid + '/currentSkin').set(skinId);
             this.postgameRewardsScene.startPurchase();
@@ -202,7 +203,7 @@ export default class Play extends React.Component {
                 overlay = <PostgameCelebration />
                 break;
             case "postgameRewards":
-                overlay = <PostgameRewards name={this.state.name} bits={this.state.bits} startPurchase={this.startPurchase} />
+                overlay = <PostgameRewards startPurchase={this.startPurchase} />
                 break;
             default:
                 overlay = null;
