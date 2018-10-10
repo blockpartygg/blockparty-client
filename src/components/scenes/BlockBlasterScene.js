@@ -20,7 +20,7 @@ class BlockBlasterScene {
 
     setupScene() {
         this.scene = new THREE.Scene();
-        let sceneColor = new THREE.Color(0x888888);
+        let sceneColor = new THREE.Color(0xffffff);
         this.scene.background = sceneColor;
         let directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
         directionalLight1.position.set(0, 0, 1).normalize();
