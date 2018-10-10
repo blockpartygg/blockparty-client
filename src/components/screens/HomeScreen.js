@@ -175,7 +175,7 @@ export default class Home extends React.Component {
                 stateString = "The party just ended";
                 break;
             default:
-                stateString = "?";
+                stateString = "";
                 break;
         }
 
