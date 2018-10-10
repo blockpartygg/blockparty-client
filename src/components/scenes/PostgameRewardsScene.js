@@ -1,14 +1,12 @@
+import { Asset } from 'expo';
 import firebase from '../../Firebase';
 import { TweenLite } from 'gsap';
 import THREE from '../../THREE';
-import '../../TeapotBufferGeometry';
+import ExpoTHREE from 'expo-three';
+require('three/examples/js/loaders/OBJLoader');
+require('three/examples/js/loaders/MTLLoader');
 
 class PostgameRewardsScene {
-    avatar = {
-        currentScaleValue: 1,
-        nextScaleValue: 0.000001
-    }
-
     constructor(renderer) {
         this.renderer = renderer;
     }
@@ -101,12 +99,15 @@ class PostgameRewardsScene {
             if(this.playerAvatarMesh) {
                 this.playerGroup.remove(this.playerAvatarMesh);
             }
-            const avatarGeometry = this.avatarGeometry[player.currentSkin || 0];
-            const avatarMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
-            this.playerAvatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
-            this.playerAvatarMesh.rotation.x = Math.PI / 6;
-            this.playerAvatarMesh.rotation.y = Math.PI / 6;
-            this.playerGroup.add(this.playerAvatarMesh);
+            // const avatarGeometry = this.avatarGeometry[player.currentSkin || 0];
+            // const avatarMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
+            // this.playerAvatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
+            
+            console.log('loading material and model');
+            this.loadModelAsync();
+
+            
+            // this.playerGroup.add(this.playerAvatarMesh);
 
             // setup player name mesh
             if(this.playerNameMesh) {
@@ -120,6 +121,16 @@ class PostgameRewardsScene {
             this.playerNameMesh.position.y = 1.5;
             this.playerGroup.add(this.playerNameMesh);
         });
+    }
+
+    loadModelAsync = async () => {
+        this.playerAvatarMesh = await ExpoTHREE.loadAsync(require('../../assets/models/BlockPartyAvatar.obj'));
+        this.playerAvatarMesh.scale.x = 0.02;
+        this.playerAvatarMesh.scale.y = 0.02;
+        this.playerAvatarMesh.scale.z = 0.02;
+        this.playerAvatarMesh.rotation.x = Math.PI / 6;
+        this.playerAvatarMesh.rotation.y = Math.PI / 6 + 3 * Math.PI / 2;
+        this.playerGroup.add(this.playerAvatarMesh);
     }
 
     onTouchesBegan(state) {}
