@@ -102,12 +102,9 @@ class PostgameRewardsScene {
             // const avatarGeometry = this.avatarGeometry[player.currentSkin || 0];
             // const avatarMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, overdraw: 0.5 });
             // this.playerAvatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
-            
-            console.log('loading material and model');
-            this.loadModelAsync();
-
-            
             // this.playerGroup.add(this.playerAvatarMesh);
+
+            this.loadModelAsync();
 
             // setup player name mesh
             if(this.playerNameMesh) {
