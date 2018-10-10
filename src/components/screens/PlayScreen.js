@@ -39,6 +39,7 @@ export default class Play extends React.Component {
         round: null,
         minigame: null,
         mode: null,
+        team: null
     }
 
     scene = null;
@@ -111,6 +112,9 @@ export default class Play extends React.Component {
             let mode = snapshot.val();
             if(mode) {
                 this.setState({ mode: mode });
+                if(mode.name === "Free For All") {
+                    this.setState({ team: null });
+                }
             }
         });
         firebase.database.ref('game/teams/redTeamId').orderByValue().equalTo(firebase.uid).on('value', snapshot => {
