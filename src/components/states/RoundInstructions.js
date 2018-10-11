@@ -20,7 +20,11 @@ export default class RoundInstructions extends React.Component {
                 <Text style={{ fontSize: 24, textAlign: "center", color: "white" }}>{this.props.minigame && this.props.minigame.instructions}{'\n'}</Text>
                 <Text style={{ fontSize: 48, textAlign: "center", color: "white" }}>{this.props.mode && this.props.mode.name}</Text>
                 <Text style={{ fontSize: 24, textAlign: "center", color: "white" }}>{this.props.mode && this.props.mode.instructions}</Text>
-                <Text style={{ fontSize: 24, textAlign: "center", color: "white" }}>{this.props.team && "You're on the "}<Text style={{ color: this.props.team }}>{this.props.team}</Text> team</Text>
+                {
+                    this.props.team &&
+                    <Text style={{ fontSize: 24, textAlign: "center", color: "white" }}>You're on the <Text style={{ color: this.props.team }}>{this.props.team}</Text> team</Text>
+                }
+                
             </Animated.View>
         )
     }

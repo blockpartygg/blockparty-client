@@ -50,7 +50,7 @@ export default class MinigameStart extends React.Component {
 
         return(
             <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, justifyContent: "center", alignItems: "center" }} pointerEvents="none">
-                <Text style={{ position: "absolute", top: 50, left: "auto", fontSize: 48, textAlign: "left" }}>30</Text>
+                <Text style={{ position: "absolute", top: 50, left: 0, fontSize: 48, textAlign: "left" }}>30</Text>
                 <FlatList data={this.state.scoreboard} renderItem={renderItem} style={{ position: "absolute", right: 0, top: 50}} />
                 <Animated.Text selectable={false} style={{ fontSize: 96, textAlign: "center", opacity: this.state.opacityAnimation, transform: [{ translateX: this.state.translateAnimation }] }}>Ready...</Animated.Text>
             </View>
