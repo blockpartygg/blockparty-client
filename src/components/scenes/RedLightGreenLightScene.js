@@ -94,7 +94,7 @@ class RedLightGreenLightScene {
             if(this.playerMesh) {
                 this.playerGroup.remove(this.playerMesh);
             }
-            let playerGeometry = this.playerGeometry[player.currentSkin || 0];
+            const playerGeometry = this.playerGeometry[player.currentSkin || 0];
             const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
             this.playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
             this.playerGroup.add(this.playerMesh);
