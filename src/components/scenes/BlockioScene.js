@@ -19,13 +19,14 @@ class BlockioScene {
         this.setupAvatarGeometry();
         this.setupPlayer();
         // this.setupOtherPlayers();
-        this.setupFood();
+        // this.setupFood();
+        this.joinGame();
         this.sendStateInterval = setInterval(this.sendPlayerState, 1000 / 60);
     }
 
     setupScene() {
         this.scene = new THREE.Scene();
-        let sceneColor = new THREE.Color(0xf0f0f0);
+        const sceneColor = new THREE.Color(0xf0f0f0);
         this.scene.background = sceneColor;
     }
 
@@ -40,7 +41,7 @@ class BlockioScene {
     }
 
     setupLighting() {
-        let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         directionalLight.position.set(0, 0, 1).normalize();
         this.scene.add(directionalLight);
     }
@@ -81,46 +82,49 @@ class BlockioScene {
 
     setupPlayer() {
         this.player = {
-            positionX: 0,
-            positionY: 0,
-            velocityX: 0,
-            velocityY: 0,
-            accelerationX: 0,
-            accelerationY: 0,
+            position: {
+                x: Math.random() * 10 - 5,
+                y: Math.random() * 10 - 5,
+            },
+            velocity: {
+                x: 0,
+                y: 0,
+            },
+            acceleration: {
+                x: 0,
+                y: 0,
+            },
             speed: 20,
         }
-        this.player.positionX = Math.random() * 10 - 5;
-        this.player.positionY = Math.random() * 10 - 5;
-        this.player.velocityX = 0;
-        this.player.velocityY = 0;
 
         this.playerGroup = new THREE.Group();
-        this.playerGroup.position.x = this.player.positionX;
-        this.playerGroup.position.y = this.player.positionY;
+        this.playerGroup.position.x = this.player.position.x;
+        this.playerGroup.position.y = this.player.position.y;
         this.scene.add(this.playerGroup);
 
         firebase.database.ref('players/' + firebase.uid).on('value', snapshot => {
-            let player = snapshot.val();
+            const player = snapshot.val();
 
-            if(this.playerMesh) {
-                this.playerGroup.remove(this.playerMesh);
+            // setup player avatar mesh
+            if(this.playerAvatarMesh) {
+                this.playerGroup.remove(this.playerAvatarMesh);
             }
-            let avatarGeometry = this.avatarGeometry[player.currentSkin || 0];
-            const color = 0x0000ff;
-            const avatarMaterial = new THREE.MeshLambertMaterial({ color: color, overdraw: 0.5 });
-            this.avatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
-            this.playerGroup.add(this.avatarMesh);
+            const avatarGeometry = this.avatarGeometry[player.currentSkin || 0];
+            const avatarMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff, overdraw: 0.5 });
+            this.playerAvatarMesh = new THREE.Mesh(avatarGeometry, avatarMaterial);
+            this.playerGroup.add(this.playerAvatarMesh);
 
-            if(this.nameMesh) {
-                this.playerGroup.remove(this.nameMesh);
+            // setup player name mesh
+            if(this.playerNameMesh) {
+                this.playerGroup.remove(this.playerNameMesh);
             }
-            let name = player.name;
-            const nameGeometry = new THREE.TextGeometry(name, { font: this.font, size: 0.5, height: 0 });
-            const nameMaterial = new THREE.MeshPhongMaterial({ color: color, overdraw: 0.5 });
-            this.nameMesh = new THREE.Mesh(nameGeometry, nameMaterial);
-            this.nameMesh.position.x = 0;
-            this.nameMesh.position.y = 1.5;
-            this.playerGroup.add(this.nameMesh);
+            const nameGeometry = new THREE.TextGeometry(player.name, { font: this.font, size: 0.5, height: 0 });
+            const nameMaterial = new THREE.MeshPhongMaterial({ color: 0x0000ff, overdraw: 0.5 });
+            this.playerNameMesh = new THREE.Mesh(nameGeometry, nameMaterial);
+            nameGeometry.computeBoundingBox();
+            this.playerNameMesh.position.x = -nameGeometry.boundingBox.max.x / 2;
+            this.playerNameMesh.position.y = 1.5;
+            this.playerGroup.add(this.playerNameMesh);
         });
     }
 
@@ -133,7 +137,7 @@ class BlockioScene {
                     return;
                 }
 
-                let player = playerSnapshot.val();
+                const player = playerSnapshot.val();
                 if(player) {
                     if(!this.otherPlayers[playerSnapshot.key]) {
                         this.otherPlayers[playerSnapshot.key] = {};
@@ -212,6 +216,10 @@ class BlockioScene {
         });
     }
 
+    joinGame() {
+        socketIO.socket.emit('minigames/blockio/joinGame');
+    }
+
     sendPlayerState = () => {
         if(firebase.isAuthed) {
             socketIO.socket.emit('minigames/blockio/setPlayer', firebase.uid, this.player);
@@ -237,41 +245,40 @@ class BlockioScene {
     }
 
     movePlayer() {
-        this.player.accelerationX = this.touch.x;
-        this.player.accelerationY = this.touch.y;
+        this.player.acceleration.x = this.touch.x;
+        this.player.acceleration.y = this.touch.y;
     }
 
     update(delta) {
-        this.player.velocityX += this.player.accelerationX * this.player.speed * delta;
-        this.player.velocityY += this.player.accelerationY * this.player.speed * delta;
-        this.player.accelerationX = 0;
-        this.player.accelerationY = 0;
-        this.player.velocityX *= 0.95;
-        this.player.velocityY *= 0.95;
-        this.player.positionX += this.player.velocityX * delta;
-        this.player.positionY += this.player.velocityY * delta;
-        if(this.player.positionX <= -5) {
-            this.player.positionX = -5;
+        this.player.velocity.x += this.player.acceleration.x * this.player.speed * delta;
+        this.player.velocity.y += this.player.acceleration.y * this.player.speed * delta;
+        this.player.velocity.x *= 0.95;
+        this.player.velocity.y *= 0.95;
+        this.player.acceleration.x = 0;
+        this.player.acceleration.y = 0;
+        this.player.position.x += this.player.velocity.x * delta;
+        this.player.position.y += this.player.velocity.y * delta;
+        if(this.player.position.x <= -5) {
+            this.player.position.x = -5;
         }
-        if(this.player.positionX >= 5) {
-            this.player.positionX = 5;
+        if(this.player.position.x >= 5) {
+            this.player.position.x = 5;
         }
-        if(this.player.positionY <= -5) {
-            this.player.positionY = -5;
+        if(this.player.position.y <= -5) {
+            this.player.position.y = -5;
         }
-        if(this.player.positionY >= 5) {
-            this.player.positionY = 5;
+        if(this.player.position.y >= 5) {
+            this.player.position.y = 5;
         }
 
         const foodIds = Object.keys(this.food);
         foodIds.forEach(foodId => {
             const food = this.food[foodId];
             if(food) {
-                let deltaX = this.player.positionX - food.position.x;
-                let deltaY = this.player.positionY - food.position.y;
+                let deltaX = this.player.position.x - food.position.x;
+                let deltaY = this.player.position.y - food.position.y;
                 let distance = deltaX * deltaX + deltaY * deltaY;
                 if(distance < 1 && food.active) {
-                    console.log('eating food');
                     this.food[foodId].active = false;
                     socketIO.socket.emit('minigames/blockio/eatFood', foodId, firebase.uid);
                 }
@@ -279,13 +286,13 @@ class BlockioScene {
         });
 
         if(this.playerGroup) {
-            this.playerGroup.position.x = this.player.positionX;
-            this.playerGroup.position.y = this.player.positionY;
+            this.playerGroup.position.x = this.player.position.x;
+            this.playerGroup.position.y = this.player.position.y;
         }
 
-        this.camera.position.x = this.player.positionX;
-        this.camera.position.y = this.player.positionY - 5;
-        this.camera.position.z = 5;
+        this.camera.position.x = this.player.position.x + this.cameraOffset.x;
+        this.camera.position.y = this.player.position.y + this.cameraOffset.y;
+        this.camera.position.z = this.player.position.z + this.cameraOffset.z;
     }
 
     render() {
@@ -293,8 +300,7 @@ class BlockioScene {
     }
 
     shutdown() {
-        // firebase.database.ref('minigame/blockio/players').off();
-        // firebase.database.ref('minigame/blockio/food').off();
+        firebase.database.ref('players/' + firebase.uid).off();
 
         clearInterval(this.sendStateInterval);
 
