@@ -14,6 +14,12 @@
       "image": "./src/assets/images/BlockPartySplash.png",
       "backgroundColor": "#570C76",
       "resizeMode": "contain"
+    },
+    "packagerOpts": {
+      "assetExts": [
+        "obj",
+        "mtl"
+      ]
     }
   }
 }

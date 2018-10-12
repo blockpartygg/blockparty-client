@@ -4,7 +4,8 @@ class SocketIO {
     constructor() {}
 
     initialize() {
-        let uri = process.env.NODE_ENV === 'production' ? 'https://blockparty-server.herokuapp.com:1337' : 'http://192.168.86.44:1337';
+        // On Heroku, http server port is set dynamically but always listens for connections on default port 80
+        let uri = process.env.NODE_ENV === 'production' ? 'http://blockparty-server.herokuapp.com' : 'http://192.168.86.48:1337';
         this.socket = socketIO(uri);
         this.socket.on('connect_error', error => {
             console.log("SocketIO: Event: 'connect_error': error=");

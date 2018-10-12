@@ -4,6 +4,8 @@ import firebase from '../../Firebase';
 
 export default class MinigamePlay extends React.Component {
     state = {
+        players: [],
+        scoreboard: [],
         translateAnimation: new Animated.Value(-1000),
         opacityAnimation: new Animated.Value(1),
         timeRemaining: 60
@@ -11,11 +13,12 @@ export default class MinigamePlay extends React.Component {
 
     componentDidMount() {
         analytics.sendEvent('Game State', 'Start', 'Minigame Play');
+        
         firebase.database.ref('players').on('value', snapshot => {
             this.setState({ players: snapshot.val() });
         });
 
-        firebase.database.ref('game/scoreboard').orderByValue().limitToFirst(5).on('value', snapshot => {
+        firebase.database.ref('game/scoreboard').orderByValue().limitToLast(5).on('value', snapshot => {
             let ascendingScoreboard = [];
             let rank = snapshot.numChildren();
             snapshot.forEach(score => {
@@ -47,7 +50,7 @@ export default class MinigamePlay extends React.Component {
 
     render() {
         let renderItem = ({item}) => (
-            <View style={{ marginTop: 40, flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "stretch" }}>
+            <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <Text style={{ fontSize: 18 }}>{item.rank}</Text>
                 <Text style={{ fontSize: 24 }}>{item.name}</Text>
                 <Text style={{ fontSize: 18 }}>{item.score}</Text>
@@ -56,8 +59,8 @@ export default class MinigamePlay extends React.Component {
 
         return(
             <View style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, justifyContent: "center", alignItems: "center" }} pointerEvents="none">
-                <Text style={{ position: "absolute", top: 40, left: "auto", fontSize: 48, textAlign: "center" }}>{this.state.timeRemaining}</Text>
-                <FlatList data={this.state.scoreboard} renderItem={renderItem} style={{ position: "absolute", right: 0, top: 0}} />
+                <Text style={{ position: "absolute", top: 50, left: 0, fontSize: 48, textAlign: "left" }}>{this.state.timeRemaining}</Text>
+                <FlatList data={this.state.scoreboard} renderItem={renderItem} style={{ position: "absolute", right: 0, top: 50}} />
                 <Animated.Text selectable={false} style={{ position: "absolute", left: "auto", top: "auto", fontSize: 96, textAlign: "center", opacity: this.state.opacityAnimation, transform: [{ translateX: this.state.translateAnimation }] }}>Go!</Animated.Text>
             </View>
         )

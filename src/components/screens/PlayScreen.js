@@ -32,26 +32,36 @@ export default class Play extends React.Component {
     }
 
     state = {
-        name: null,
-        bits: null,
+        player: {},
+        players: [],
         state: null,
         endTime: null,
         round: null,
         minigame: null,
         mode: null,
+        team: null
     }
 
     scene = null;
     overlay = null;
 
     componentDidMount() {
+        this.setupAuthListener();
+        this.setupDatabaseListeners();
+
+        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
+            analytics.sendScreenView('Play');
+        });
+    }
+
+    setupAuthListener() {
         this.unsubscribeAuthStateChanged = firebase.auth.onAuthStateChanged(user => {
             if(!user) {
                 firebase.signOut(() => {
                     this.props.navigation.navigate('Title');
                 });
             } else {
-                firebase.database.ref('players/' + user.uid).once('value', snapshot => {
+                firebase.database.ref('players/' + user.uid).on('value', snapshot => {
                     let player = snapshot.val();
                     if(!player) {
                         firebase.signOut(() => {
@@ -65,13 +75,15 @@ export default class Play extends React.Component {
                             });
                         }
                         else {
-                            this.setState({ name: player.name });
+                            this.setState({ player: player });
                         }
                     }
                 });
             }
         });
+    }
 
+    setupDatabaseListeners() {
         firebase.database.ref('game/state').on('value', snapshot => {
             let state = snapshot.val();
             if(state) {
@@ -100,6 +112,9 @@ export default class Play extends React.Component {
             let mode = snapshot.val();
             if(mode) {
                 this.setState({ mode: mode });
+                if(mode.name === "Free For All") {
+                    this.setState({ team: null });
+                }
             }
         });
         firebase.database.ref('game/teams/redTeamId').orderByValue().equalTo(firebase.uid).on('value', snapshot => {
@@ -118,21 +133,11 @@ export default class Play extends React.Component {
                 this.setState({ players: players });
             }
         });
-        firebase.database.ref('players/' + firebase.uid + '/currency').on('value', snapshot => {
-            let bits = snapshot.val();
-            if(bits) {
-                this.setState({ bits: bits });
-            }
-        });
-
-        this.didFocusListener = this.props.navigation.addListener('didFocus', () => {
-            analytics.sendScreenView('Play');
-        });
     }
 
     startPurchase = () => {
-        if(this.state.bits >= 100) {
-            firebase.database.ref('players/' + firebase.uid + '/currency').set(this.state.bits - 100);
+        if(this.state.player.currency >= 100) {
+            firebase.database.ref('players/' + firebase.uid + '/currency').set(this.state.player.currency - 100);
             let skinId = Math.floor(Math.random() * 5);
             firebase.database.ref('players/' + firebase.uid + '/currentSkin').set(skinId);
             this.postgameRewardsScene.startPurchase();
@@ -202,7 +207,7 @@ export default class Play extends React.Component {
                 overlay = <PostgameCelebration />
                 break;
             case "postgameRewards":
-                overlay = <PostgameRewards name={this.state.name} bits={this.state.bits} startPurchase={this.startPurchase} />
+                overlay = <PostgameRewards startPurchase={this.startPurchase} />
                 break;
             default:
                 overlay = null;
@@ -261,47 +266,33 @@ export default class Play extends React.Component {
             case "pregameIntroduction":
             case "roundIntroduction":
             case "roundInstructions":
-                if(this.scene !== this.backgroundScene) {
-                    if(this.scene) {
-                        this.scene.shutdown();
-                    }
-                    this.scene = this.backgroundScene;
-                    this.scene.initialize();
-                }
+                this.setScene(this.backgroundScene);
                 break;
             case "minigameStart":
             case "minigamePlay":
             case "minigameEnd":
-                if(this.scene !== this.minigameScene) {
-                    if(this.scene) {
-                        this.scene.shutdown();
-                    }
-                    this.scene = this.minigameScene;
-                    this.scene.initialize();
-                }
+                this.setScene(this.minigameScene);
                 break;
             case "roundResultsScoreboard":
             case "roundResultsLeaderboard":
             case "postgameCelebration":
-                if(this.scene && this.scene !== this.backgroundScene) {
-                    if(this.scene) {
-                        this.scene.shutdown();
-                    }
-                    this.scene = this.backgroundScene;
-                    this.scene.initialize();
-                }
+                this.setScene(this.backgroundScene);
                 break;
             case "postgameRewards":
-                if(this.scene && this.scene !== this.postgameRewardsScene) {
-                    if(this.scene) {
-                        this.scene.shutdown();
-                    }
-                    this.scene = this.postgameRewardsScene;
-                    this.scene.initialize();
-                }
+                this.setScene(this.postgameRewardsScene);
                 break;
             default:
                 break;
+        }
+    }
+
+    setScene(scene) {
+        if(this.scene !== scene) {
+            if(this.scene) {
+                this.scene.shutdown();
+            }
+            this.scene = scene;
+            this.scene.initialize();
         }
     }
 
@@ -328,12 +319,17 @@ export default class Play extends React.Component {
     }
 
     componentWillUnmount() {
+        console.log('unmounting play');
         this.unsubscribeAuthStateChanged();
         firebase.database.ref('game/state').off();
         firebase.database.ref('game/endTime').off();
         firebase.database.ref('game/round').off();
         firebase.database.ref('game/minigame').off();
         firebase.database.ref('game/mode').off();
+        firebase.database.ref('game/teams/redTeamId').off();
+        firebase.database.ref('game/teams/blueTeamId').off();
+        firebase.database.ref('players').off();
+        firebase.database.ref('players/' + firebase.uid + '/currency').off();
 
         this.didFocusListener.remove();
     }

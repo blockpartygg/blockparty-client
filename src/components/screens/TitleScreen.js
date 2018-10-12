@@ -1,5 +1,5 @@
 import React from 'react';
-import { AsyncStorage, View, Image, Text, TouchableOpacity, Animated } from 'react-native';
+import { AsyncStorage, View, Text, TouchableOpacity, Animated } from 'react-native';
 import firebase from '../../Firebase';
 import analytics from '../../Analytics';
 import blockPartyLogo from '../../assets/images/BlockPartyLogoSquare.png';
