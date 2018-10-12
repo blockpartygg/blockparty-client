@@ -105,9 +105,52 @@ export default class Home extends React.Component {
 
     update = () => {
         if(this.state.endTime != null) {
-            let timeRemaining = new Date(new Date(this.state.endTime).getTime() - Date.now());
-            let minutes = timeRemaining.getMinutes();
-            let seconds = timeRemaining.getSeconds() < 10 ? '0' + timeRemaining.getSeconds() : timeRemaining.getSeconds();
+            const timeRemaining = new Date(new Date(this.state.endTime).getTime() - Date.now());
+            const minutes = timeRemaining.getMinutes();
+            const rawSeconds = timeRemaining.getSeconds();
+            let additionalTime;
+            switch(this.state.state) {
+                case "pregameCountdown":
+                    additionalTime = 15;
+                    break;
+                case "pregameTitle":
+                    additionalTime = 10;
+                    break;
+                case "pregameIntroduction":
+                    additionalTime = 0;
+                    break;
+                case "roundIntroduction":
+                    additionalTime = 10;
+                    break;
+                case "roundInstructions":
+                    additionalTime = 0;
+                    break;
+                case "minigameStart":
+                    additionalTime = 33;
+                    break;
+                case "minigamePlay":
+                    additionalTime = 3;
+                    break;
+                case "minigameEnd":
+                    additionalTime = 0;
+                    break;
+                case "roundResultsScoreboard":
+                    additionalTime = 10;
+                    break;
+                case "roundResultsLeaderboard":
+                    additionalTime = 0
+                    break;
+                case "postgameCelebration":
+                    additionalTime = 10;
+                    break;
+                case "postgameRewards":
+                    additionalTime = 0;
+                    break;
+                default:
+                    additionalTime = 0;
+                    break;
+            }
+            const seconds = rawSeconds + additionalTime < 10 ? '0' + (rawSeconds + additionalTime) : rawSeconds + additionalTime;
             let timeRemainingFormatted = `${minutes}:${seconds}`;
             this.setState({ timeRemaining: timeRemainingFormatted });
         }

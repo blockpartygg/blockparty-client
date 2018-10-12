@@ -319,6 +319,7 @@ export default class Play extends React.Component {
     }
 
     componentWillUnmount() {
+        console.log('unmounting play');
         this.unsubscribeAuthStateChanged();
         firebase.database.ref('game/state').off();
         firebase.database.ref('game/endTime').off();
